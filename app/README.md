@@ -2,8 +2,6 @@
 
 Aplicacion mobile Android de Stoqo construida con React Native CLI y TypeScript.
 
-No usa Expo ni Expo Go.
-
 ## Comandos principales
 
 ```bash
