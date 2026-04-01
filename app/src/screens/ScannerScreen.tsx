@@ -79,7 +79,6 @@ export function ScannerScreen({
     lastAcceptedAtRef.current = now;
 
     setLastScannedCode(winner);
-   //  console.log('Codigo detectado:', winner);
   };
 
   const codeScanner = useCodeScanner({
