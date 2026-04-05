@@ -1,12 +1,34 @@
 # Stoqo Frontend
 
-Frontend de la aplicación Stoqo, desarrollado con React Native y Expo.
+Frontend mobile Android de Stoqo, desarrollado con React Native CLI y TypeScript.
+
+El proyecto corre como app nativa Android con soporte para escaneo de codigos de barras usando Google ML Kit a traves de `react-native-vision-camera`.
+
+## Stack actual
+
+- React Native CLI
+- TypeScript
+- React Native Vision Camera
+- Google ML Kit Barcode Scanning
+
+## Tecnologias extra que hubo que instalar
+
+- Node.js 22 LTS (versiones superiores no son compatibles con React Native)
+- Java 21 (React Native 0.84 no es compatible con Java 22+)
+- Android Studio (incluye SDK Manager y emulador)
+- Android SDK con NDK 27.1.12297006 (versiones anteriores del NDK rompen el build de C++)
+- Android SDK Platform-Tools (`adb`)
+- React Native Vision Camera (`react-native-vision-camera`)
+- Google ML Kit Barcode Scanning habilitado en Android via `VisionCamera_enableCodeScanner=true`
 
 ## Requisitos
 
-- Node.js 18+
-- [Expo Go](https://expo.dev/go) instalado en el celular (para pruebas en dispositivo físico)
-- [Android Studio](https://developer.android.com/studio) (para el emulador)
+- Node.js 22 LTS
+- Java 21
+- Android Studio con SDK instalado
+- NDK 27.1.12297006 instalado via SDK Manager
+- `adb` disponible en `PATH`
+- Celular Android con depuracion USB habilitada o emulador Android
 
 ## Instalar dependencias
 
@@ -18,33 +40,58 @@ npm install
 ## Correr el servidor de desarrollo
 
 ```bash
-npx expo start
+cd app
+npm start
 ```
 
-## Ver la app en el celular
+## Instalar y ejecutar la app en Android
 
-Hay que estar en la misma red que la PC. Si la PC está en LAN y el celular en WiFi, puede funcionar igual si el router los pone en la misma subred. En caso de que no funcione, se puede usar tunnel:
+En otra terminal:
 
 ```bash
-npx expo start --tunnel
+cd app
+npm run android
 ```
 
-Si pide instalar la dependencia:
+## Probar en celular fisico
+
+1. Activar `Opciones de desarrollador`
+2. Activar `Depuracion por USB`
+3. Conectar el celular por USB
+4. Verificar que `adb` vea el dispositivo:
 
 ```bash
-npx expo install @expo/ngrok
+adb devices
 ```
 
-Después hay que escanear el QR que aparece en la terminal con la app Expo Go.
-
-## Ver la app en el emulador Android
-
-1. Instalar Android Studio:
+5. Con Metro corriendo, redirigir el puerto:
 
 ```bash
-yay -S android-studio
+adb reverse tcp:8081 tcp:8081
 ```
 
-2. Abrir Android Studio, ir a **More Actions > Virtual Device Manager** y crear un dispositivo
+6. Si la app ya esta instalada, se puede volver a abrir con:
 
-3. Iniciar el emulador y presionar `a` en la terminal donde corre `npx expo start`
+```bash
+adb shell am start -n com.app/.MainActivity
+```
+
+## Escaneo de codigos
+
+- La camara detecta codigos `EAN-13` y `EAN-8`
+- Se usa una ventana corta de lecturas para hacer el escaneo mas robusto
+- Se valida checksum EAN para reducir falsos positivos
+
+## Estructura actual
+
+El frontend vive en `stoqo_frontend/app`.
+
+Dentro de `app/src` se esta empezando a ordenar el proyecto con una estructura tipo Atomic Design:
+
+- `components/atoms`
+- `components/molecules`
+- `components/organisms`
+- `screens`
+- `utils`
+- `types`
+- `constants`
