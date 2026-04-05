@@ -13,17 +13,20 @@ El proyecto corre como app nativa Android con soporte para escaneo de codigos de
 
 ## Tecnologias extra que hubo que instalar
 
-- Node.js 22 LTS
-- Android Studio
-- Android SDK
+- Node.js 22 LTS (versiones superiores no son compatibles con React Native)
+- Java 21 (React Native 0.84 no es compatible con Java 22+)
+- Android Studio (incluye SDK Manager y emulador)
+- Android SDK con NDK 27.1.12297006 (versiones anteriores del NDK rompen el build de C++)
 - Android SDK Platform-Tools (`adb`)
 - React Native Vision Camera (`react-native-vision-camera`)
 - Google ML Kit Barcode Scanning habilitado en Android via `VisionCamera_enableCodeScanner=true`
 
 ## Requisitos
 
-- Node.js 22+
+- Node.js 22 LTS
+- Java 21
 - Android Studio con SDK instalado
+- NDK 27.1.12297006 instalado via SDK Manager
 - `adb` disponible en `PATH`
 - Celular Android con depuracion USB habilitada o emulador Android
 
