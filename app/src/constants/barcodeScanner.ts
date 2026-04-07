@@ -1,3 +1,6 @@
-export const MIN_DETECTIONS = 3;
-export const SCAN_WINDOW_MS = 350;
 export const SAME_CODE_COOLDOWN_MS = 2000;
+export const BARCODE_LOST_DELAY_MS = 350;
+export const BARCODE_SWITCH_CONFIRMATIONS = 2;
+
+export const SCAN_GUIDE_WIDTH_RATIO = 0.84;
+export const SCAN_GUIDE_HEIGHT = 150;
