@@ -101,8 +101,7 @@ export function ScannerScreen({
       setBannerMessage('Buscando producto...');
 
       const requestId = ++lookupRequestIdRef.current;
-      console.log('[lookup] consultando barcode:', barcode);
-
+      
       try {
         const result = await fetchProductByBarcode(barcode);
 
