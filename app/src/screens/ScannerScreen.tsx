@@ -17,7 +17,7 @@ import {
 } from '../components/molecules';
 import { fetchProductByBarcode } from '../services';
 import type { ScannedProductItem } from '../types';
-import { isValidEan } from '../utils';
+import { isValidEAN } from '../utils';
 
 
 type ScannerScreenProps = {
@@ -37,7 +37,7 @@ function getWinner(codes: Code[]): string | null {
         return false;
       }
 
-      return isValidEan(code.type, code.value);
+      return isValidEAN(code.type, code.value);
     })
     .map(code => code.value as string);
 
@@ -155,7 +155,7 @@ export function ScannerScreen({
         activeBarcodeRef.current = winner;
         candidateBarcodeRef.current = null;
         candidateCountRef.current = 0;
-        void handleAcceptedBarcode(winner);
+        handleAcceptedBarcode(winner).catch(() => undefined);
         return;
       }
 
@@ -177,7 +177,7 @@ export function ScannerScreen({
         activeBarcodeRef.current = winner;
         candidateBarcodeRef.current = null;
         candidateCountRef.current = 0;
-        void handleAcceptedBarcode(winner);
+        handleAcceptedBarcode(winner).catch(() => undefined);
       }
     },
   });

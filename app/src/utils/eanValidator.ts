@@ -4,7 +4,7 @@ function isDigitsOnly(value: string): boolean {
   return /^\d+$/.test(value);
 }
 
-function isValidEan8(value: string): boolean {
+function isValidEAN8(value: string): boolean {
   if (!isDigitsOnly(value) || value.length !== 8) {
     return false;
   }
@@ -26,7 +26,7 @@ function isValidEan8(value: string): boolean {
   return checkDigit === calculatedCheckDigit;
 }
 
-function isValidEan13(value: string): boolean {
+function isValidEAN13(value: string): boolean {
   if (!isDigitsOnly(value) || value.length !== 13) {
     return false;
   }
@@ -45,13 +45,13 @@ function isValidEan13(value: string): boolean {
   return checkDigit === calculatedCheckDigit;
 }
 
-export function isValidEan(type: Code['type'], value: string): boolean {
+export function isValidEAN(type: Code['type'], value: string): boolean {
   if (type === 'ean-13') {
-    return isValidEan13(value);
+    return isValidEAN13(value);
   }
 
   if (type === 'ean-8') {
-    return isValidEan8(value);
+    return isValidEAN8(value);
   }
 
   return false;
