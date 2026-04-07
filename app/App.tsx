@@ -1,15 +1,16 @@
 import React, { useState } from 'react';
 import {
   HomeScreen,
+  Onboarding,
   ScannerScreen,
   ScannedProductsReviewScreen,
 } from './src/screens';
 import type { ScannedProductItem } from './src/types';
 
-type CurrentScreen = 'home' | 'scanner' | 'review';
+type Screen = 'onboarding' | 'home' | 'scanner' | 'review';
 
 export default function App(): React.JSX.Element {
-  const [currentScreen, setCurrentScreen] = useState<CurrentScreen>('home');
+  const [currentScreen, setCurrentScreen] = useState<Screen>('onboarding');
   const [scannedItems, setScannedItems] = useState<ScannedProductItem[]>([]);
 
   const handleStartScanning = () => {
@@ -50,6 +51,18 @@ export default function App(): React.JSX.Element {
   const handleRemoveItem = (barcode: string) => {
     setScannedItems(prev => prev.filter(item => item.barcode !== barcode));
   };
+
+  if (currentScreen === 'onboarding') {
+    return (
+      <Onboarding
+        onComplete={(pantry) => {
+          console.log('Despensa inicial:', pantry);
+          setCurrentScreen('home');
+        }}
+        onSkip={() => setCurrentScreen('home')}
+      />
+    );
+  }
 
   if (currentScreen === 'home') {
     return <HomeScreen onStartScanning={handleStartScanning} />;
