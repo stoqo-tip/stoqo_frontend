@@ -1,1 +1,1 @@
-export * from './barcode';
+export * from './scannedProduct';

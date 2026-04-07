@@ -5,10 +5,16 @@ import {
    SCAN_GUIDE_HEIGHT,
    SCAN_GUIDE_WIDTH_RATIO,
 } from '../../constants';
-import type { LookupState } from '../../hooks';
+
+export type ScannerFeedbackState =
+   | 'idle'
+   | 'loading'
+   | 'success'
+   | 'not-found'
+   | 'error';
 
 type Props = {
-   lookupState: LookupState;
+   lookupState: ScannerFeedbackState;
 };
 
 export function ScannerGuideOverlay({
@@ -18,13 +24,12 @@ export function ScannerGuideOverlay({
 
    const feedback = useMemo(() => {
       if (lookupState === 'success') {
-         return { symbol: '✓', color: '#51d97b' };
+         return { symbol: '\u2713', color: '#51d97b' };
       }
 
       if (lookupState === 'not-found' || lookupState === 'error') {
-         return { symbol: '✕', color: '#ff5f5f' };
+         return { symbol: '\u2715', color: '#ff5f5f' };
       }
-
 
       return null;
    }, [lookupState]);
