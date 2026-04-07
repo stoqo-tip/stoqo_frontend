@@ -3,14 +3,17 @@ import { StyleSheet, Text, View } from 'react-native';
 
 type ScannerStatusBannerProps = {
   label: string;
+  message?: string;
 };
 
 export function ScannerStatusBanner({
   label,
+  message,
 }: ScannerStatusBannerProps): React.JSX.Element {
   return (
     <View style={styles.container}>
       <Text style={styles.text}>{label}</Text>
+      {message ? <Text style={styles.message}>{message}</Text> : null}
     </View>
   );
 }
@@ -29,5 +32,12 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     textAlign: 'center',
+    fontWeight: '600',
+  },
+  message: {
+    color: '#fff',
+    fontSize: 14,
+    textAlign: 'center',
+    marginTop: 4,
   },
 });
