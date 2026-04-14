@@ -45,7 +45,7 @@ export function AnimatedJar({ stockKey }: Props) {
       friction: 7,
       useNativeDriver: false,
     }).start();
-  }, [fill, stockKey]);
+  }, [fill, stockKey, fillAnim, scaleAnim]);
 
   const fillHeight = fillAnim.interpolate({
     inputRange: [0, 1],
@@ -57,8 +57,8 @@ export function AnimatedJar({ stockKey }: Props) {
 
   return (
     <Animated.View style={[styles.container, { transform: [{ scale: scaleAnim }] }]}>
-      <View style={[styles.lid, { backgroundColor: isActive ? '#1A1A2E' : '#BDBDBD' }]} />
-      <View style={[styles.body, { borderColor: isActive ? '#1A1A2E' : '#CCCCCC', borderWidth: isActive ? 2 : 1.5 }]}>
+      <View style={[styles.lid, isActive ? styles.lidActive : styles.lidInactive]} />
+      <View style={[styles.body, isActive ? styles.bodyActive : styles.bodyInactive]}>
         <Animated.View style={[styles.fill, { height: fillHeight, backgroundColor: color }]} />
         {isIgnore && (
           <View style={styles.absoluteFill} pointerEvents="none">
@@ -85,6 +85,12 @@ const styles = StyleSheet.create({
     borderRadius: 3,
     marginBottom: 1,
   },
+  lidActive: {
+    backgroundColor: '#1A1A2E',
+  },
+  lidInactive: {
+    backgroundColor: '#BDBDBD',
+  },
   body: {
     width: JAR_W,
     height: BODY_H,
@@ -92,6 +98,14 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     backgroundColor: '#F5F5F3',
     justifyContent: 'flex-end',
+  },
+  bodyActive: {
+    borderColor: '#1A1A2E',
+    borderWidth: 2,
+  },
+  bodyInactive: {
+    borderColor: '#CCCCCC',
+    borderWidth: 1.5,
   },
   fill: {
     width: '100%',
