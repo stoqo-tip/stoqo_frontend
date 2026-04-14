@@ -1,75 +1,134 @@
-import React from 'react';
-import { TouchableOpacity, View, Text, StyleSheet } from 'react-native';
-import { StockLevel } from '../../constants';
+import React, { useEffect, useRef } from 'react';
+import { Animated, StyleSheet, View } from 'react-native';
+import { StockKey, STOCK_LEVELS } from '../../constants';
 
-const JAR_W = 36;
-const JAR_H = 42;
-const LID_H = 6;
+const JAR_W = 46;
+const JAR_H = 56;
+const LID_H = 7;
 const BODY_H = JAR_H - LID_H;
 
 interface Props {
-  level: StockLevel;
-  selected: boolean;
-  onPress: () => void;
+  stockKey: StockKey | undefined;
 }
 
-export function JarButton({ level, selected, onPress }: Props) {
-  const borderColor = selected ? '#1A1A2E' : '#BDBDBD';
-  const borderWidth = selected ? 2 : 1.5;
-  const lidColor = selected ? '#1A1A2E' : '#9E9E9E';
+function getFill(key: StockKey | undefined): number {
+  if (!key || key === 'ignore') return 0;
+  const level = STOCK_LEVELS.find((l) => l.key === key);
+  if (!level || level.fill === null) return 0;
+  return level.fill === 0 ? 0.05 : level.fill;
+}
+
+function getColor(key: StockKey | undefined): string {
+  if (!key || key === 'ignore') return '#E0E0E0';
+  return STOCK_LEVELS.find((l) => l.key === key)?.color ?? '#E0E0E0';
+}
+
+export function AnimatedJar({ stockKey }: Props) {
+  const fill = getFill(stockKey);
+  const color = getColor(stockKey);
+
+  const fillAnim = useRef(new Animated.Value(fill)).current;
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+  const prevKeyRef = useRef(stockKey);
+
+  useEffect(() => {
+    if (prevKeyRef.current !== stockKey) {
+      prevKeyRef.current = stockKey;
+      Animated.sequence([
+        Animated.timing(scaleAnim, { toValue: 1.13, duration: 75, useNativeDriver: true }),
+        Animated.spring(scaleAnim, { toValue: 1, tension: 280, friction: 8, useNativeDriver: true }),
+      ]).start();
+    }
+    Animated.spring(fillAnim, {
+      toValue: fill,
+      tension: 90,
+      friction: 7,
+      useNativeDriver: false,
+    }).start();
+  }, [fill, stockKey, fillAnim, scaleAnim]);
+
+  const fillHeight = fillAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0%', '100%'],
+  });
+
+  const isActive = !!stockKey && stockKey !== 'ignore';
+  const isIgnore = stockKey === 'ignore';
 
   return (
-    <TouchableOpacity onPress={onPress} activeOpacity={0.7} style={styles.touch}>
-      <View style={{ width: JAR_W, height: JAR_H, alignItems: 'center' }}>
-        <View style={[styles.lid, { backgroundColor: lidColor }]} />
-        <View style={[styles.body, { borderColor, borderWidth }]}>
-          {level.fill !== null && (
-            <View
-              style={[
-                styles.fill,
-                { height: `${level.fill * 100}%`, backgroundColor: level.color },
-              ]}
-            />
-          )}
-          {level.icon === '✕' && (
-            <View style={StyleSheet.absoluteFillObject} pointerEvents="none">
-              <Text style={styles.cross}>{level.icon}</Text>
+    <Animated.View style={[styles.container, { transform: [{ scale: scaleAnim }] }]}>
+      <View style={[styles.lid, isActive ? styles.lidActive : styles.lidInactive]} />
+      <View style={[styles.body, isActive ? styles.bodyActive : styles.bodyInactive]}>
+        <Animated.View style={[styles.fill, { height: fillHeight, backgroundColor: color }]} />
+        {isIgnore && (
+          <View style={styles.absoluteFill} pointerEvents="none">
+            <View style={styles.ignoreWrap}>
+              <View style={[styles.ignoreLine, { transform: [{ rotate: '45deg' }] }]} />
+              <View style={[styles.ignoreLine, { transform: [{ rotate: '-45deg' }] }]} />
             </View>
-          )}
-        </View>
+          </View>
+        )}
       </View>
-    </TouchableOpacity>
+    </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
-  touch: {
-    padding: 2,
+  container: {
+    width: JAR_W,
+    height: JAR_H,
+    alignItems: 'center',
   },
   lid: {
-    width: JAR_W * 0.8,
+    width: JAR_W * 0.72,
     height: LID_H,
     borderRadius: 3,
     marginBottom: 1,
   },
+  lidActive: {
+    backgroundColor: '#1A1A2E',
+  },
+  lidInactive: {
+    backgroundColor: '#BDBDBD',
+  },
   body: {
     width: JAR_W,
     height: BODY_H,
-    borderRadius: 6,
+    borderRadius: 8,
     overflow: 'hidden',
-    backgroundColor: '#FAFAFA',
+    backgroundColor: '#F5F5F3',
     justifyContent: 'flex-end',
+  },
+  bodyActive: {
+    borderColor: '#1A1A2E',
+    borderWidth: 2,
+  },
+  bodyInactive: {
+    borderColor: '#CCCCCC',
+    borderWidth: 1.5,
   },
   fill: {
     width: '100%',
-    opacity: 0.85,
+    borderTopLeftRadius: 5,
+    borderTopRightRadius: 5,
   },
-  cross: {
-    color: '#9E9E9E',
-    fontSize: 14,
-    fontWeight: '700',
-    textAlign: 'center',
-    textAlignVertical: 'center',
+  ignoreWrap: {
     flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  ignoreLine: {
+    position: 'absolute',
+    width: 18,
+    height: 2,
+    backgroundColor: '#BDBDBD',
+    borderRadius: 1,
+  },
+  absoluteFill: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
 });

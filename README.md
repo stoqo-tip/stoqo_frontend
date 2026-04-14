@@ -68,6 +68,7 @@ adb devices
 
 ```bash
 adb reverse tcp:8081 tcp:8081
+adb reverse tcp:8000 tcp:8000
 ```
 
 6. Si la app ya esta instalada, se puede volver a abrir con:

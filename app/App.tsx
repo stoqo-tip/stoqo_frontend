@@ -77,36 +77,40 @@ export default function App(): React.JSX.Element {
     }
   };
 
-  let content: React.JSX.Element;
+  const renderScreen = (): React.JSX.Element => {
+    if (currentScreen === 'onboarding') {
+      return (
+        <Onboarding
+          onComplete={(pantry) => {
+            console.log('Despensa inicial:', pantry);
+            setCurrentScreen('home');
+          }}
+          onSkip={() => setCurrentScreen('home')}
+        />
+      );
+    }
 
-  if (currentScreen === 'onboarding') {
-    content = (
-      <Onboarding
-        onComplete={(pantry) => {
-          console.log('Despensa inicial:', pantry);
-          setCurrentScreen('home');
-        }}
-        onSkip={() => setCurrentScreen('home')}
-      />
-    );
-  } else if (currentScreen === 'home') {
-    content = <HomeScreen onStartScanning={handleStartScanning} />;
-  } else if (currentScreen === 'scanner') {
-    content = (
-      <ScannerScreen
-        onBack={() => {
-          setCurrentScreen('home');
-        }}
-        onFinalize={() => {
-          setReviewSaveError(null);
-          setCurrentScreen('review');
-        }}
-        scannedItems={scannedItems}
-        onAddScannedItem={handleAddScannedItem}
-      />
-    );
-  } else {
-    content = (
+    if (currentScreen === 'home') {
+      return <HomeScreen onStartScanning={handleStartScanning} />;
+    }
+
+    if (currentScreen === 'scanner') {
+      return (
+        <ScannerScreen
+          onBack={() => {
+            setCurrentScreen('home');
+          }}
+          onFinalize={() => {
+            setReviewSaveError(null);
+            setCurrentScreen('review');
+          }}
+          scannedItems={scannedItems}
+          onAddScannedItem={handleAddScannedItem}
+        />
+      );
+    }
+
+    return (
       <ScannedProductsReviewScreen
         items={scannedItems}
         onBackToScanner={() => {
@@ -123,11 +127,11 @@ export default function App(): React.JSX.Element {
         saveError={reviewSaveError}
       />
     );
-  }
+  };
 
   return (
     <GestureHandlerRootView style={styles.root}>
-      {content}
+      {renderScreen()}
     </GestureHandlerRootView>
   );
 }
