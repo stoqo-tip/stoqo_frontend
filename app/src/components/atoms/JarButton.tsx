@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { Animated, StyleSheet, View, PanResponder } from 'react-native';
+import { Animated, StyleSheet, View } from 'react-native';
 import { StockKey, STOCK_LEVELS } from '../../constants';
 
 const JAR_W = 46;
@@ -9,15 +9,13 @@ const BODY_H = JAR_H - LID_H;
 
 interface Props {
   stockKey: StockKey | undefined;
-  onIncrement: () => void;
-  onDecrement: () => void;
 }
 
 function getFill(key: StockKey | undefined): number {
   if (!key || key === 'ignore') return 0;
   const level = STOCK_LEVELS.find((l) => l.key === key);
   if (!level || level.fill === null) return 0;
-  return level.fill === 0 ? 0.05 : level.fill; 
+  return level.fill === 0 ? 0.05 : level.fill;
 }
 
 function getColor(key: StockKey | undefined): string {
@@ -25,7 +23,7 @@ function getColor(key: StockKey | undefined): string {
   return STOCK_LEVELS.find((l) => l.key === key)?.color ?? '#E0E0E0';
 }
 
-export function AnimatedJar({ stockKey, onIncrement, onDecrement }: Props) {
+export function AnimatedJar({ stockKey }: Props) {
   const fill = getFill(stockKey);
   const color = getColor(stockKey);
 
@@ -34,24 +32,13 @@ export function AnimatedJar({ stockKey, onIncrement, onDecrement }: Props) {
   const prevKeyRef = useRef(stockKey);
 
   useEffect(() => {
-    // Scale pulse on every level change
     if (prevKeyRef.current !== stockKey) {
       prevKeyRef.current = stockKey;
       Animated.sequence([
-        Animated.timing(scaleAnim, {
-          toValue: 1.13,
-          duration: 75,
-          useNativeDriver: true,
-        }),
-        Animated.spring(scaleAnim, {
-          toValue: 1,
-          tension: 280,
-          friction: 8,
-          useNativeDriver: true,
-        }),
+        Animated.timing(scaleAnim, { toValue: 1.13, duration: 75, useNativeDriver: true }),
+        Animated.spring(scaleAnim, { toValue: 1, tension: 280, friction: 8, useNativeDriver: true }),
       ]).start();
     }
-    // Spring-animate fill level
     Animated.spring(fillAnim, {
       toValue: fill,
       tension: 90,
@@ -60,18 +47,6 @@ export function AnimatedJar({ stockKey, onIncrement, onDecrement }: Props) {
     }).start();
   }, [fill, stockKey]);
 
-  const panResponder = useRef(
-    PanResponder.create({
-      // Only claim the gesture if it is clearly horizontal
-      onMoveShouldSetPanResponder: (_, gs) =>
-        Math.abs(gs.dx) > 10 && Math.abs(gs.dx) > Math.abs(gs.dy) * 1.5,
-      onPanResponderRelease: (_, gs) => {
-        if (gs.dx > 35) onIncrement();
-        else if (gs.dx < -35) onDecrement();
-      },
-    })
-  ).current;
-
   const fillHeight = fillAnim.interpolate({
     inputRange: [0, 1],
     outputRange: ['0%', '100%'],
@@ -79,35 +54,14 @@ export function AnimatedJar({ stockKey, onIncrement, onDecrement }: Props) {
 
   const isActive = !!stockKey && stockKey !== 'ignore';
   const isIgnore = stockKey === 'ignore';
-  const borderColor = isActive ? '#1A1A2E' : '#CCCCCC';
-  const lidColor = isActive ? '#1A1A2E' : '#BDBDBD';
 
   return (
-    <Animated.View
-      {...panResponder.panHandlers}
-      style={[styles.container, { transform: [{ scale: scaleAnim }] }]}
-    >
-      {/* Lid */}
-      <View style={[styles.lid, { backgroundColor: lidColor }]} />
-
-      {/* Body */}
-      <View
-        style={[styles.body, { borderColor, borderWidth: isActive ? 2 : 1.5 }]}
-      >
-        {/* Liquid fill */}
-        <Animated.View
-          style={[
-            styles.fill,
-            { height: fillHeight, backgroundColor: color },
-          ]}
-        />
-
-        {/* "No consumo" X overlay */}
+    <Animated.View style={[styles.container, { transform: [{ scale: scaleAnim }] }]}>
+      <View style={[styles.lid, { backgroundColor: isActive ? '#1A1A2E' : '#BDBDBD' }]} />
+      <View style={[styles.body, { borderColor: isActive ? '#1A1A2E' : '#CCCCCC', borderWidth: isActive ? 2 : 1.5 }]}>
+        <Animated.View style={[styles.fill, { height: fillHeight, backgroundColor: color }]} />
         {isIgnore && (
-          <View
-            style={StyleSheet.absoluteFillObject}
-            pointerEvents="none"
-          >
+          <View style={styles.absoluteFill} pointerEvents="none">
             <View style={styles.ignoreWrap}>
               <View style={[styles.ignoreLine, { transform: [{ rotate: '45deg' }] }]} />
               <View style={[styles.ignoreLine, { transform: [{ rotate: '-45deg' }] }]} />
@@ -155,5 +109,12 @@ const styles = StyleSheet.create({
     height: 2,
     backgroundColor: '#BDBDBD',
     borderRadius: 1,
+  },
+  absoluteFill: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
 });
