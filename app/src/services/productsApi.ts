@@ -10,13 +10,12 @@ export type ProductLookupResult = {
 };
 
 const API_BASE_URL = 'http://127.0.0.1:8000';
-const DEFAULT_USER_ID = 1;
 
 export async function fetchProductByBarcode(
   barcode: string,
 ): Promise<ProductLookupResult> {
   const response = await fetch(
-    `${API_BASE_URL}/open-food-facts/${barcode}?user_id=${DEFAULT_USER_ID}`,
+    `${API_BASE_URL}/open-food-facts/${barcode}`,
   );
 
   if (!response.ok) {

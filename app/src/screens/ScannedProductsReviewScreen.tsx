@@ -7,7 +7,7 @@ import {
    View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
+import { ScannedProductReviewRow } from '../components/molecules';
 import type { ScannedProductItem } from '../types';
 
 type ScannedProductsReviewScreenProps = {
@@ -17,6 +17,9 @@ type ScannedProductsReviewScreenProps = {
    onIncrementQuantity: (barcode: string) => void;
    onDecrementQuantity: (barcode: string) => void;
    onRemoveItem: (barcode: string) => void;
+   onConfirmItems: () => void;
+   isSaving: boolean;
+   saveError: string | null;
 };
 
 export function ScannedProductsReviewScreen({
@@ -26,6 +29,9 @@ export function ScannedProductsReviewScreen({
    onIncrementQuantity,
    onDecrementQuantity,
    onRemoveItem,
+   onConfirmItems,
+   isSaving,
+   saveError,
 }: ScannedProductsReviewScreenProps): React.JSX.Element {
    return (
       <SafeAreaView style={styles.container}>
@@ -45,55 +51,14 @@ export function ScannedProductsReviewScreen({
             data={items}
             keyExtractor={item => item.barcode}
             contentContainerStyle={styles.listContent}
-            renderItem={({ item }) => {
-               const secondaryText =
-                  [item.brand, item.category].filter(Boolean).join(' \u2022 ') ||
-                  item.barcode;
-
-               return (
-                  <View style={styles.row}>
-                     <View style={styles.infoColumn}>
-                        <Text style={styles.itemName} numberOfLines={2}>
-                           {item.name}
-                        </Text>
-                        <Text style={styles.itemMeta} numberOfLines={2}>
-                           {secondaryText}
-                        </Text>
-                     </View>
-
-                     <View style={styles.actionsColumn}>
-                        <View style={styles.quantityPill}>
-                           <Pressable
-                              disabled={item.quantity === 1}
-                              onPress={() => onDecrementQuantity(item.barcode)}
-                              style={[
-                                 styles.quantityButton,
-                                 item.quantity === 1 && styles.quantityButtonDisabled,
-                              ]}
-                           >
-                              <Text style={styles.minusText}>-</Text>
-                           </Pressable>
-
-                           <Text style={styles.quantityValue}>{item.quantity}</Text>
-
-                           <Pressable
-                              onPress={() => onIncrementQuantity(item.barcode)}
-                              style={styles.quantityButton}
-                           >
-                              <Text style={styles.plusText}>+</Text>
-                           </Pressable>
-                        </View>
-
-                        <Pressable
-                           onPress={() => onRemoveItem(item.barcode)}
-                           style={styles.deleteButton}
-                        >
-                           <Text style={styles.deleteButtonText}>Borrar</Text>
-                        </Pressable>
-                     </View>
-                  </View>
-               );
-            }}
+            renderItem={({ item }) => (
+               <ScannedProductReviewRow
+                  item={item}
+                  onIncrementQuantity={onIncrementQuantity}
+                  onDecrementQuantity={onDecrementQuantity}
+                  onRemoveItem={onRemoveItem}
+               />
+            )}
             ListEmptyComponent={
                <View style={styles.emptyState}>
                   <Text style={styles.emptyTitle}>No hay productos escaneados</Text>
@@ -103,6 +68,23 @@ export function ScannedProductsReviewScreen({
                </View>
             }
          />
+
+         <View style={styles.footer}>
+            {saveError ? <Text style={styles.errorText}>{saveError}</Text> : null}
+
+            <Pressable
+               onPress={onConfirmItems}
+               disabled={items.length === 0 || isSaving}
+               style={[
+                  styles.confirmButton,
+                  (items.length === 0 || isSaving) && styles.confirmButtonDisabled,
+               ]}
+            >
+               <Text style={styles.confirmButtonText}>
+                  {isSaving ? 'Guardando...' : 'Guardar en alacena'}
+               </Text>
+            </Pressable>
+         </View>
       </SafeAreaView>
    );
 }
@@ -134,90 +116,8 @@ const styles = StyleSheet.create({
    },
    listContent: {
       paddingHorizontal: 20,
-      paddingVertical: 24,
-   },
-   row: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      gap: 16,
-      backgroundColor: '#fff',
-      borderRadius: 22,
-      paddingHorizontal: 18,
-      paddingVertical: 18,
-      marginBottom: 18,
-   },
-   infoColumn: {
-      flex: 1,
-      gap: 6,
-   },
-   itemName: {
-      color: '#1f1f24',
-      fontSize: 17,
-      fontWeight: '600',
-   },
-   itemMeta: {
-      color: '#8f8f97',
-      fontSize: 14,
-      lineHeight: 20,
-   },
-   actionsColumn: {
-      alignItems: 'flex-end',
-      gap: 10,
-   },
-   quantityPill: {
-      minWidth: 132,
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      borderWidth: 2,
-      borderColor: '#5163ff',
-      borderRadius: 999,
-      paddingHorizontal: 12,
-      paddingVertical: 8,
-      backgroundColor: '#fff',
-   },
-   quantityButton: {
-      width: 32,
-      height: 32,
-      alignItems: 'center',
-      justifyContent: 'center',
-      borderRadius: 16,
-   },
-   quantityButtonDisabled: {
-      opacity: 0.35,
-   },
-   minusText: {
-      color: '#ff6a4d',
-      fontSize: 28,
-      fontWeight: '600',
-      lineHeight: 30,
-   },
-   plusText: {
-      color: '#5163ff',
-      fontSize: 28,
-      fontWeight: '600',
-      lineHeight: 30,
-   },
-   quantityValue: {
-      color: '#2a2a34',
-      fontSize: 22,
-      fontWeight: '700',
-      minWidth: 24,
-      textAlign: 'center',
-   },
-   deleteButton: {
-      borderRadius: 999,
-      borderWidth: 1,
-      borderColor: '#ffd0d0',
-      backgroundColor: '#fff4f4',
-      paddingHorizontal: 14,
-      paddingVertical: 7,
-   },
-   deleteButtonText: {
-      color: '#e05656',
-      fontSize: 13,
-      fontWeight: '700',
+      paddingTop: 24,
+      paddingBottom: 16,
    },
    emptyState: {
       paddingTop: 80,
@@ -235,5 +135,32 @@ const styles = StyleSheet.create({
       textAlign: 'center',
       lineHeight: 22,
       paddingHorizontal: 24,
+   },
+   footer: {
+      paddingHorizontal: 20,
+      paddingTop: 8,
+      paddingBottom: 24,
+      gap: 10,
+      backgroundColor: '#f7f7fb',
+   },
+   errorText: {
+      color: '#d14343',
+      fontSize: 14,
+      fontWeight: '600',
+      textAlign: 'center',
+   },
+   confirmButton: {
+      backgroundColor: '#3158ff',
+      borderRadius: 18,
+      paddingVertical: 14,
+      alignItems: 'center',
+   },
+   confirmButtonDisabled: {
+      backgroundColor: '#7f92d6',
+   },
+   confirmButtonText: {
+      color: '#fff',
+      fontSize: 16,
+      fontWeight: '700',
    },
 });
