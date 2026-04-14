@@ -30,11 +30,15 @@ function CategorySectionComponent({ category, pantry, onUpdate }: Props) {
     prevFilledRef.current = filledCount;
   }, [filledCount, total]);
 
+  function handleToggle() {
+    setCollapsed((c) => !c);
+  }
+
   return (
     <View style={[styles.container, completed && styles.containerCompleted]}>
       <TouchableOpacity
         style={styles.header}
-        onPress={() => setCollapsed((c) => !c)}
+        onPress={handleToggle}
         activeOpacity={0.8}
       >
         <View style={styles.headerLeft}>
@@ -72,16 +76,16 @@ export const CategorySection = memo(CategorySectionComponent);
 
 const styles = StyleSheet.create({
   container: {
-  backgroundColor: '#FFFFFF',
-  borderRadius: 16,
-  marginBottom: 12,
-  minHeight: 52,
-  shadowColor: '#000',
-  shadowOpacity: 0.05,
-  shadowRadius: 8,
-  shadowOffset: { width: 0, height: 2 },
-  elevation: 2,
-},
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    marginBottom: 12,
+    minHeight: 52,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
+  },
   containerCompleted: {
     borderWidth: 1.5,
     borderColor: '#4CAF82',
