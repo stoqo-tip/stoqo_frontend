@@ -5,6 +5,7 @@ import {
    Pressable,
    StyleSheet,
    Text,
+   TouchableOpacity,
    View,
 } from 'react-native';
 
@@ -17,25 +18,13 @@ type Props = {
    onRemoveItem: (barcode: string) => void;
 };
 
-const SWIPE_INCREMENT_THRESHOLD = 28;
-const SWIPE_DECREMENT_THRESHOLD = -28;
 const SWIPE_DELETE_THRESHOLD = -110;
-
-const ACTION_PANEL_WIDTH = 124;
-const DECREMENT_OFFSET = -56;
 const DELETE_OFFSET = -92;
-const INCREMENT_OFFSET = 56;
-const ACTION_FLASH_DURATION_MS = 120;
+const ACTION_PANEL_WIDTH = 124;
 
 function clamp(value: number, min: number, max: number): number {
    return Math.max(min, Math.min(max, value));
 }
-
-type RightActionPanelProps = {
-   deleteMode: boolean;
-   quantity: number;
-   onRemove: () => void;
-};
 
 function TrashIcon(): React.JSX.Element {
    return (
@@ -51,22 +40,49 @@ function TrashIcon(): React.JSX.Element {
    );
 }
 
-function RightActionPanel({
-   deleteMode,
+type QuantityStepperProps = {
+   quantity: number;
+   onIncrement: () => void;
+   onDecrement: () => void;
+};
+
+function QuantityStepper({
    quantity,
-   onRemove,
-}: RightActionPanelProps): React.JSX.Element {
-   if (deleteMode) {
-      return (
-         <Pressable style={styles.deletePanel} onPress={onRemove}>
-            <TrashIcon />
-         </Pressable>
-      );
-   }
+   onIncrement,
+   onDecrement,
+}: QuantityStepperProps): React.JSX.Element {
+   const canDecrement = quantity > 1;
 
    return (
-      <View style={styles.rightHint}>
-         {quantity > 1 ? <Text style={styles.actionText}>-</Text> : null}
+      <View style={styles.stepper}>
+         <TouchableOpacity
+            onPress={onDecrement}
+            disabled={!canDecrement}
+            style={[styles.stepperButton, !canDecrement && styles.stepperButtonOff]}
+            activeOpacity={0.75}
+         >
+            <Text
+               style={[
+                  styles.stepperGlyph,
+                  !canDecrement && styles.stepperGlyphOff,
+               ]}
+            >
+               -
+            </Text>
+         </TouchableOpacity>
+
+         <View style={styles.quantityWrap}>
+            <Text style={styles.quantityValue}>x{quantity}</Text>
+            <Text style={styles.quantityHint}>cantidad</Text>
+         </View>
+
+         <TouchableOpacity
+            onPress={onIncrement}
+            style={styles.stepperButton}
+            activeOpacity={0.75}
+         >
+            <Text style={styles.stepperGlyph}>+</Text>
+         </TouchableOpacity>
       </View>
    );
 }
@@ -81,7 +97,7 @@ export function ScannedProductReviewRow({
    const [deleteMode, setDeleteMode] = useState(false);
 
    const secondaryText =
-      [item.brand, item.category].filter(Boolean).join(' \u2022 ') || item.barcode;
+      [item.brand, item.category].filter(Boolean).join(' • ') || item.barcode;
 
    const animateTo = (toValue: number, callback?: () => void) => {
       Animated.spring(translateX, {
@@ -93,28 +109,6 @@ export function ScannedProductReviewRow({
          if (callback) {
             callback();
          }
-      });
-   };
-
-   const flashAction = (toValue: number, onCommit: () => void) => {
-      animateTo(toValue, () => {
-         onCommit();
-
-         setTimeout(() => {
-            animateTo(0);
-         }, ACTION_FLASH_DURATION_MS);
-      });
-   };
-
-   const handleIncrement = () => {
-      flashAction(INCREMENT_OFFSET, () => {
-         onIncrementQuantity(item.barcode);
-      });
-   };
-
-   const handleDecrement = () => {
-      flashAction(DECREMENT_OFFSET, () => {
-         onDecrementQuantity(item.barcode);
       });
    };
 
@@ -140,28 +134,15 @@ export function ScannedProductReviewRow({
             return;
          }
 
-         translateX.setValue(clamp(gestureState.dx, -170, 80));
+         translateX.setValue(clamp(gestureState.dx, -170, 0));
       },
       onPanResponderRelease: (_, gestureState) => {
          if (deleteMode) {
             return;
          }
 
-         if (gestureState.dx >= SWIPE_INCREMENT_THRESHOLD) {
-            handleIncrement();
-            return;
-         }
-
          if (gestureState.dx <= SWIPE_DELETE_THRESHOLD) {
             activateDeleteMode();
-            return;
-         }
-
-         if (
-            gestureState.dx <= SWIPE_DECREMENT_THRESHOLD &&
-            item.quantity > 1
-         ) {
-            handleDecrement();
             return;
          }
 
@@ -177,15 +158,12 @@ export function ScannedProductReviewRow({
    return (
       <View style={styles.wrapper}>
          <View style={styles.backgroundLayer}>
-            <View style={styles.leftHint}>
-               <Text style={styles.actionText}>+</Text>
-            </View>
-
-            <RightActionPanel
-               deleteMode={deleteMode}
-               quantity={item.quantity}
-               onRemove={() => onRemoveItem(item.barcode)}
-            />
+            <Pressable
+               style={styles.deletePanel}
+               onPress={() => onRemoveItem(item.barcode)}
+            >
+               <TrashIcon />
+            </Pressable>
          </View>
 
          <Animated.View
@@ -213,9 +191,11 @@ export function ScannedProductReviewRow({
                   </Text>
                </View>
 
-               <View style={styles.trailingInfo}>
-                  <Text style={styles.quantityBadge}>x{item.quantity}</Text>
-               </View>
+               <QuantityStepper
+                  quantity={item.quantity}
+                  onIncrement={() => onIncrementQuantity(item.barcode)}
+                  onDecrement={() => onDecrementQuantity(item.barcode)}
+               />
             </Pressable>
          </Animated.View>
       </View>
@@ -225,9 +205,9 @@ export function ScannedProductReviewRow({
 const styles = StyleSheet.create({
    wrapper: {
       width: '100%',
-      marginBottom: 18,
+      marginBottom: 16,
       position: 'relative',
-      borderRadius: 22,
+      borderRadius: 24,
       overflow: 'hidden',
    },
    backgroundLayer: {
@@ -236,28 +216,8 @@ const styles = StyleSheet.create({
       right: 0,
       bottom: 0,
       left: 0,
-      borderRadius: 22,
+      borderRadius: 24,
       overflow: 'hidden',
-   },
-   leftHint: {
-      position: 'absolute',
-      left: 0,
-      top: 0,
-      bottom: 0,
-      width: ACTION_PANEL_WIDTH,
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: '#c9ebc7',
-   },
-   rightHint: {
-      position: 'absolute',
-      right: 0,
-      top: 0,
-      bottom: 0,
-      width: ACTION_PANEL_WIDTH,
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: '#fdeabf',
    },
    deletePanel: {
       position: 'absolute',
@@ -267,12 +227,7 @@ const styles = StyleSheet.create({
       width: ACTION_PANEL_WIDTH,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: '#b95a5d',
-   },
-   actionText: {
-      color: '#1f1f24',
-      fontSize: 22,
-      fontWeight: '800',
+      backgroundColor: '#c35f63',
    },
    trashIcon: {
       width: 38,
@@ -320,9 +275,11 @@ const styles = StyleSheet.create({
    },
    row: {
       width: '100%',
-      backgroundColor: '#fff',
-      borderRadius: 22,
+      backgroundColor: '#FFFFFF',
+      borderRadius: 24,
       zIndex: 1,
+      borderWidth: 1,
+      borderColor: '#EFEDE7',
    },
    rowDeleteMode: {
       backgroundColor: '#fff7f7',
@@ -330,34 +287,66 @@ const styles = StyleSheet.create({
    rowContent: {
       flexDirection: 'row',
       alignItems: 'center',
-      justifyContent: 'space-between',
       gap: 16,
       paddingHorizontal: 18,
       paddingVertical: 18,
    },
    infoColumn: {
       flex: 1,
-      gap: 6,
       minWidth: 0,
+      gap: 6,
    },
    itemName: {
-      color: '#1f1f24',
-      fontSize: 17,
-      fontWeight: '600',
+      color: '#1A1A2E',
+      fontSize: 18,
+      fontWeight: '700',
+      letterSpacing: -0.3,
    },
    itemMeta: {
-      color: '#8f8f97',
+      color: '#8D8D8D',
       fontSize: 14,
       lineHeight: 20,
    },
-   trailingInfo: {
-      alignItems: 'flex-end',
-      justifyContent: 'center',
-      marginLeft: 8,
+   stepper: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
    },
-   quantityBadge: {
-      color: '#2a2a34',
-      fontSize: 15,
+   stepperButton: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      backgroundColor: '#1A1A2E',
+      alignItems: 'center',
+      justifyContent: 'center',
+   },
+   stepperButtonOff: {
+      backgroundColor: 'transparent',
+      borderWidth: 1.5,
+      borderColor: '#E0E0E0',
+   },
+   stepperGlyph: {
+      fontSize: 22,
+      lineHeight: 24,
+      color: '#FFFFFF',
+      fontWeight: '400',
+   },
+   stepperGlyphOff: {
+      color: '#D0D0D0',
+   },
+   quantityWrap: {
+      alignItems: 'center',
+      minWidth: 46,
+   },
+   quantityValue: {
+      color: '#1A1A2E',
+      fontSize: 16,
       fontWeight: '700',
+   },
+   quantityHint: {
+      marginTop: 2,
+      color: '#B3B3B3',
+      fontSize: 10,
+      fontWeight: '500',
    },
 });

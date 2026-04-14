@@ -36,15 +36,20 @@ export function ScannedProductsReviewScreen({
    return (
       <SafeAreaView style={styles.container}>
          <View style={styles.header}>
-            <Pressable onPress={onBackToScanner}>
-               <Text style={styles.headerAction}>Volver</Text>
-            </Pressable>
+            <View style={styles.headerTopRow}>
+               <Pressable onPress={onBackToScanner} style={styles.topAction}>
+                  <Text style={styles.topActionText}>Volver</Text>
+               </Pressable>
+
+               <Pressable onPress={onBackHome} style={styles.skipBtn}>
+                  <Text style={styles.skipText}>Inicio</Text>
+               </Pressable>
+            </View>
 
             <Text style={styles.title}>Productos escaneados</Text>
-
-            <Pressable onPress={onBackHome}>
-               <Text style={styles.headerAction}>Inicio</Text>
-            </Pressable>
+            <Text style={styles.subtitle}>
+               Ajustá cantidades y deslizá a la izquierda para eliminar.
+            </Text>
          </View>
 
          <FlatList
@@ -59,28 +64,29 @@ export function ScannedProductsReviewScreen({
                   onRemoveItem={onRemoveItem}
                />
             )}
+            showsVerticalScrollIndicator={false}
             ListEmptyComponent={
                <View style={styles.emptyState}>
                   <Text style={styles.emptyTitle}>No hay productos escaneados</Text>
                   <Text style={styles.emptySubtitle}>
-                     Escanea al menos uno y despues toca finalizar.
+                     Escaneá al menos uno y después tocá finalizar.
                   </Text>
                </View>
             }
          />
 
-         <View style={styles.footer}>
+         <View style={styles.ctaContainer}>
             {saveError ? <Text style={styles.errorText}>{saveError}</Text> : null}
 
             <Pressable
                onPress={onConfirmItems}
                disabled={items.length === 0 || isSaving}
                style={[
-                  styles.confirmButton,
-                  (items.length === 0 || isSaving) && styles.confirmButtonDisabled,
+                  styles.ctaBtn,
+                  (items.length === 0 || isSaving) && styles.ctaBtnDisabled,
                ]}
             >
-               <Text style={styles.confirmButtonText}>
+               <Text style={styles.ctaText}>
                   {isSaving ? 'Guardando...' : 'Guardar en alacena'}
                </Text>
             </Pressable>
@@ -92,32 +98,54 @@ export function ScannedProductsReviewScreen({
 const styles = StyleSheet.create({
    container: {
       flex: 1,
-      backgroundColor: '#f7f7fb',
+      backgroundColor: '#FAFAF8',
    },
    header: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
       paddingHorizontal: 20,
-      paddingVertical: 18,
-      borderBottomWidth: 1,
-      borderBottomColor: '#e8e8ef',
-      backgroundColor: '#fff',
+      paddingTop: 16,
+      paddingBottom: 12,
    },
-   headerAction: {
-      color: '#3158ff',
-      fontSize: 15,
+   headerTopRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+   },
+   topAction: {
+      paddingVertical: 6,
+   },
+   topActionText: {
+      fontSize: 16,
       fontWeight: '600',
+      color: '#3158ff',
+   },
+   skipBtn: {
+      paddingVertical: 6,
+      paddingHorizontal: 12,
+      borderRadius: 20,
+      borderWidth: 1,
+      borderColor: '#BDBDBD',
+   },
+   skipText: {
+      fontSize: 13,
+      color: '#757575',
    },
    title: {
-      color: '#222',
-      fontSize: 20,
+      marginTop: 14,
+      fontSize: 30,
       fontWeight: '700',
+      color: '#1A1A2E',
+      letterSpacing: -0.6,
+   },
+   subtitle: {
+      marginTop: 4,
+      fontSize: 15,
+      color: '#757575',
+      lineHeight: 21,
    },
    listContent: {
-      paddingHorizontal: 20,
-      paddingTop: 24,
-      paddingBottom: 16,
+      paddingHorizontal: 16,
+      paddingTop: 6,
+      paddingBottom: 100,
    },
    emptyState: {
       paddingTop: 80,
@@ -125,42 +153,44 @@ const styles = StyleSheet.create({
       gap: 10,
    },
    emptyTitle: {
-      color: '#222',
+      color: '#222222',
       fontSize: 20,
       fontWeight: '700',
    },
    emptySubtitle: {
-      color: '#666',
+      color: '#666666',
       fontSize: 15,
       textAlign: 'center',
       lineHeight: 22,
       paddingHorizontal: 24,
    },
-   footer: {
+   ctaContainer: {
       paddingHorizontal: 20,
-      paddingTop: 8,
-      paddingBottom: 24,
+      paddingVertical: 16,
+      borderTopWidth: 1,
+      borderTopColor: '#EFEFEF',
+      backgroundColor: '#FAFAF8',
       gap: 10,
-      backgroundColor: '#f7f7fb',
    },
    errorText: {
-      color: '#d14343',
+      color: '#D14343',
       fontSize: 14,
       fontWeight: '600',
       textAlign: 'center',
    },
-   confirmButton: {
-      backgroundColor: '#3158ff',
-      borderRadius: 18,
-      paddingVertical: 14,
+   ctaBtn: {
+      backgroundColor: '#1A1A2E',
+      borderRadius: 16,
+      paddingVertical: 16,
       alignItems: 'center',
    },
-   confirmButtonDisabled: {
-      backgroundColor: '#7f92d6',
+   ctaBtnDisabled: {
+      backgroundColor: '#D0D0CC',
    },
-   confirmButtonText: {
-      color: '#fff',
+   ctaText: {
+      color: '#FFFFFF',
       fontSize: 16,
       fontWeight: '700',
+      letterSpacing: 0.2,
    },
 });
