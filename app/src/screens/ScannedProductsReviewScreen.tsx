@@ -7,7 +7,7 @@ import {
    View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
+import { ScannedProductReviewRow } from '../components/molecules';
 import type { ScannedProductItem } from '../types';
 
 type ScannedProductsReviewScreenProps = {
@@ -17,6 +17,9 @@ type ScannedProductsReviewScreenProps = {
    onIncrementQuantity: (barcode: string) => void;
    onDecrementQuantity: (barcode: string) => void;
    onRemoveItem: (barcode: string) => void;
+   onConfirmItems: () => void;
+   isSaving: boolean;
+   saveError: string | null;
 };
 
 export function ScannedProductsReviewScreen({
@@ -26,83 +29,68 @@ export function ScannedProductsReviewScreen({
    onIncrementQuantity,
    onDecrementQuantity,
    onRemoveItem,
+   onConfirmItems,
+   isSaving,
+   saveError,
 }: ScannedProductsReviewScreenProps): React.JSX.Element {
    return (
       <SafeAreaView style={styles.container}>
          <View style={styles.header}>
-            <Pressable onPress={onBackToScanner}>
-               <Text style={styles.headerAction}>Volver</Text>
-            </Pressable>
+            <View style={styles.headerTopRow}>
+               <Pressable onPress={onBackToScanner} style={styles.topAction}>
+                  <Text style={styles.topActionText}>Volver</Text>
+               </Pressable>
+
+               <Pressable onPress={onBackHome} style={styles.skipBtn}>
+                  <Text style={styles.skipText}>Inicio</Text>
+               </Pressable>
+            </View>
 
             <Text style={styles.title}>Productos escaneados</Text>
-
-            <Pressable onPress={onBackHome}>
-               <Text style={styles.headerAction}>Inicio</Text>
-            </Pressable>
+            <Text style={styles.subtitle}>
+               Ajustá cantidades y deslizá a la izquierda para eliminar.
+            </Text>
          </View>
 
          <FlatList
             data={items}
             keyExtractor={item => item.barcode}
             contentContainerStyle={styles.listContent}
-            renderItem={({ item }) => {
-               const secondaryText =
-                  [item.brand, item.category].filter(Boolean).join(' \u2022 ') ||
-                  item.barcode;
-
-               return (
-                  <View style={styles.row}>
-                     <View style={styles.infoColumn}>
-                        <Text style={styles.itemName} numberOfLines={2}>
-                           {item.name}
-                        </Text>
-                        <Text style={styles.itemMeta} numberOfLines={2}>
-                           {secondaryText}
-                        </Text>
-                     </View>
-
-                     <View style={styles.actionsColumn}>
-                        <View style={styles.quantityPill}>
-                           <Pressable
-                              disabled={item.quantity === 1}
-                              onPress={() => onDecrementQuantity(item.barcode)}
-                              style={[
-                                 styles.quantityButton,
-                                 item.quantity === 1 && styles.quantityButtonDisabled,
-                              ]}
-                           >
-                              <Text style={styles.minusText}>-</Text>
-                           </Pressable>
-
-                           <Text style={styles.quantityValue}>{item.quantity}</Text>
-
-                           <Pressable
-                              onPress={() => onIncrementQuantity(item.barcode)}
-                              style={styles.quantityButton}
-                           >
-                              <Text style={styles.plusText}>+</Text>
-                           </Pressable>
-                        </View>
-
-                        <Pressable
-                           onPress={() => onRemoveItem(item.barcode)}
-                           style={styles.deleteButton}
-                        >
-                           <Text style={styles.deleteButtonText}>Borrar</Text>
-                        </Pressable>
-                     </View>
-                  </View>
-               );
-            }}
+            renderItem={({ item }) => (
+               <ScannedProductReviewRow
+                  item={item}
+                  onIncrementQuantity={onIncrementQuantity}
+                  onDecrementQuantity={onDecrementQuantity}
+                  onRemoveItem={onRemoveItem}
+               />
+            )}
+            showsVerticalScrollIndicator={false}
             ListEmptyComponent={
                <View style={styles.emptyState}>
                   <Text style={styles.emptyTitle}>No hay productos escaneados</Text>
                   <Text style={styles.emptySubtitle}>
-                     Escanea al menos uno y despues toca finalizar.
+                     Escaneá al menos uno y después tocá finalizar.
                   </Text>
                </View>
             }
          />
+
+         <View style={styles.ctaContainer}>
+            {saveError ? <Text style={styles.errorText}>{saveError}</Text> : null}
+
+            <Pressable
+               onPress={onConfirmItems}
+               disabled={items.length === 0 || isSaving}
+               style={[
+                  styles.ctaBtn,
+                  (items.length === 0 || isSaving) && styles.ctaBtnDisabled,
+               ]}
+            >
+               <Text style={styles.ctaText}>
+                  {isSaving ? 'Guardando...' : 'Guardar en alacena'}
+               </Text>
+            </Pressable>
+         </View>
       </SafeAreaView>
    );
 }
@@ -110,114 +98,54 @@ export function ScannedProductsReviewScreen({
 const styles = StyleSheet.create({
    container: {
       flex: 1,
-      backgroundColor: '#f7f7fb',
+      backgroundColor: '#FAFAF8',
    },
    header: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
       paddingHorizontal: 20,
-      paddingVertical: 18,
-      borderBottomWidth: 1,
-      borderBottomColor: '#e8e8ef',
-      backgroundColor: '#fff',
+      paddingTop: 16,
+      paddingBottom: 12,
    },
-   headerAction: {
-      color: '#3158ff',
-      fontSize: 15,
+   headerTopRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+   },
+   topAction: {
+      paddingVertical: 6,
+   },
+   topActionText: {
+      fontSize: 16,
       fontWeight: '600',
+      color: '#3158ff',
+   },
+   skipBtn: {
+      paddingVertical: 6,
+      paddingHorizontal: 12,
+      borderRadius: 20,
+      borderWidth: 1,
+      borderColor: '#BDBDBD',
+   },
+   skipText: {
+      fontSize: 13,
+      color: '#757575',
    },
    title: {
-      color: '#222',
-      fontSize: 20,
+      marginTop: 14,
+      fontSize: 30,
       fontWeight: '700',
+      color: '#1A1A2E',
+      letterSpacing: -0.6,
+   },
+   subtitle: {
+      marginTop: 4,
+      fontSize: 15,
+      color: '#757575',
+      lineHeight: 21,
    },
    listContent: {
-      paddingHorizontal: 20,
-      paddingVertical: 24,
-   },
-   row: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      gap: 16,
-      backgroundColor: '#fff',
-      borderRadius: 22,
-      paddingHorizontal: 18,
-      paddingVertical: 18,
-      marginBottom: 18,
-   },
-   infoColumn: {
-      flex: 1,
-      gap: 6,
-   },
-   itemName: {
-      color: '#1f1f24',
-      fontSize: 17,
-      fontWeight: '600',
-   },
-   itemMeta: {
-      color: '#8f8f97',
-      fontSize: 14,
-      lineHeight: 20,
-   },
-   actionsColumn: {
-      alignItems: 'flex-end',
-      gap: 10,
-   },
-   quantityPill: {
-      minWidth: 132,
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      borderWidth: 2,
-      borderColor: '#5163ff',
-      borderRadius: 999,
-      paddingHorizontal: 12,
-      paddingVertical: 8,
-      backgroundColor: '#fff',
-   },
-   quantityButton: {
-      width: 32,
-      height: 32,
-      alignItems: 'center',
-      justifyContent: 'center',
-      borderRadius: 16,
-   },
-   quantityButtonDisabled: {
-      opacity: 0.35,
-   },
-   minusText: {
-      color: '#ff6a4d',
-      fontSize: 28,
-      fontWeight: '600',
-      lineHeight: 30,
-   },
-   plusText: {
-      color: '#5163ff',
-      fontSize: 28,
-      fontWeight: '600',
-      lineHeight: 30,
-   },
-   quantityValue: {
-      color: '#2a2a34',
-      fontSize: 22,
-      fontWeight: '700',
-      minWidth: 24,
-      textAlign: 'center',
-   },
-   deleteButton: {
-      borderRadius: 999,
-      borderWidth: 1,
-      borderColor: '#ffd0d0',
-      backgroundColor: '#fff4f4',
-      paddingHorizontal: 14,
-      paddingVertical: 7,
-   },
-   deleteButtonText: {
-      color: '#e05656',
-      fontSize: 13,
-      fontWeight: '700',
+      paddingHorizontal: 16,
+      paddingTop: 6,
+      paddingBottom: 100,
    },
    emptyState: {
       paddingTop: 80,
@@ -225,15 +153,44 @@ const styles = StyleSheet.create({
       gap: 10,
    },
    emptyTitle: {
-      color: '#222',
+      color: '#222222',
       fontSize: 20,
       fontWeight: '700',
    },
    emptySubtitle: {
-      color: '#666',
+      color: '#666666',
       fontSize: 15,
       textAlign: 'center',
       lineHeight: 22,
       paddingHorizontal: 24,
+   },
+   ctaContainer: {
+      paddingHorizontal: 20,
+      paddingVertical: 16,
+      borderTopWidth: 1,
+      borderTopColor: '#EFEFEF',
+      backgroundColor: '#FAFAF8',
+      gap: 10,
+   },
+   errorText: {
+      color: '#D14343',
+      fontSize: 14,
+      fontWeight: '600',
+      textAlign: 'center',
+   },
+   ctaBtn: {
+      backgroundColor: '#1A1A2E',
+      borderRadius: 16,
+      paddingVertical: 16,
+      alignItems: 'center',
+   },
+   ctaBtnDisabled: {
+      backgroundColor: '#D0D0CC',
+   },
+   ctaText: {
+      color: '#FFFFFF',
+      fontSize: 16,
+      fontWeight: '700',
+      letterSpacing: 0.2,
    },
 });

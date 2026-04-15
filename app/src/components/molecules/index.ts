@@ -2,6 +2,8 @@ export * from './ScannerGuideOverlay';
 export * from './ScannerStatusBanner';
 export * from './CategoryHeader';
 export * from './CategoryLegend';
+export * from './OnboardingProgressBar';
+export * from './ScannedProductReviewRow';
 export * from './JarStepper';
 export * from './ProductRow';
 export * from './OnboardingProgressBar';
