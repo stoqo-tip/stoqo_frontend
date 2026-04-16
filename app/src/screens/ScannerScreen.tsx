@@ -1,6 +1,9 @@
 import React, { useCallback, useMemo, useRef, useState } from 'react';
-import { Button, Pressable, StyleSheet, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from 'react-native-safe-area-context';
 import {
   Camera,
   type Code,
@@ -18,7 +21,6 @@ import {
 import { fetchProductByBarcode } from '../services';
 import type { ScannedProductItem } from '../types';
 import { isValidEAN } from '../utils';
-
 
 type ScannerScreenProps = {
   onBack: () => void;
@@ -64,6 +66,21 @@ function getWinner(codes: Code[]): string | null {
   return winner;
 }
 
+function ReviewIcon(): React.JSX.Element {
+  return (
+    <View style={styles.reviewIcon}>
+      <View style={styles.reviewSheet}>
+        <View style={styles.reviewLineLong} />
+        <View style={styles.reviewLineShort} />
+        <View style={styles.reviewCheckWrap}>
+          <View style={styles.reviewCheckStem} />
+          <View style={styles.reviewCheckTick} />
+        </View>
+      </View>
+    </View>
+  );
+}
+
 export function ScannerScreen({
   onBack,
   onFinalize,
@@ -72,6 +89,7 @@ export function ScannerScreen({
 }: ScannerScreenProps): React.JSX.Element {
   const device = useCameraDevice('back');
   const { hasPermission, requestPermission } = useCameraPermission();
+  const insets = useSafeAreaInsets();
 
   const [lookupState, setLookupState] = useState<ScannerFeedbackState>('idle');
   const [bannerLabel, setBannerLabel] = useState(DEFAULT_LABEL);
@@ -101,7 +119,7 @@ export function ScannerScreen({
       setBannerMessage('Buscando producto...');
 
       const requestId = ++lookupRequestIdRef.current;
-      
+
       try {
         const result = await fetchProductByBarcode(barcode);
 
@@ -125,15 +143,14 @@ export function ScannerScreen({
         }
 
         setLookupState('not-found');
-        setBannerMessage('NOT FOUND');
-
+        setBannerMessage('No encontrado');
       } catch {
         if (requestId !== lookupRequestIdRef.current) {
           return;
         }
 
         setLookupState('error');
-        setBannerMessage('Error consultando el backend :c');
+        setBannerMessage('Error consultando el backend');
       }
     },
     [onAddScannedItem, scannedBarcodeSet],
@@ -183,23 +200,31 @@ export function ScannerScreen({
 
   if (!hasPermission) {
     return (
-      <SafeAreaView style={styles.centered}>
-        <ScreenMessage message="Necesitamos permiso para usar la camara" />
-        <Button title="Dar permiso" onPress={requestPermission} />
+      <SafeAreaView style={styles.permissionScreen}>
+        <View style={styles.permissionCard}>
+          <Text style={styles.permissionEyebrow}>Camara</Text>
+          <ScreenMessage message="Necesitamos permiso para usar la camara" />
+          <Pressable style={styles.permissionButton} onPress={requestPermission}>
+            <Text style={styles.permissionButtonText}>Dar permiso</Text>
+          </Pressable>
+        </View>
       </SafeAreaView>
     );
   }
 
   if (device == null) {
     return (
-      <SafeAreaView style={styles.centered}>
-        <ScreenMessage message="No se encontro una camara disponible" />
+      <SafeAreaView style={styles.permissionScreen}>
+        <View style={styles.permissionCard}>
+          <Text style={styles.permissionEyebrow}>Camara</Text>
+          <ScreenMessage message="No se encontro una camara disponible" />
+        </View>
       </SafeAreaView>
     );
   }
 
   return (
-    <View style={StyleSheet.absoluteFill}>
+    <View style={styles.screen}>
       <Camera
         style={StyleSheet.absoluteFill}
         device={device}
@@ -207,77 +232,242 @@ export function ScannerScreen({
         codeScanner={codeScanner}
       />
 
-      <View style={styles.topActions}>
-        <Button title="Volver" onPress={onBack} />
-      </View>
+      <View style={styles.cameraTint} />
 
-      <ScannerGuideOverlay lookupState={lookupState} />
-
-      <ScannerStatusBanner label={bannerLabel} message={bannerMessage} />
-
-      <View style={styles.bottomActions}>
-        <Text style={styles.counterText}>
-          {scannedItems.length} producto{scannedItems.length === 1 ? '' : 's'} en
-          lista
-        </Text>
-
-        <Pressable
-          onPress={onFinalize}
-          disabled={scannedItems.length === 0}
+      <SafeAreaView style={styles.overlay} edges={['top', 'bottom']}>
+        <View
           style={[
-            styles.finalizeButton,
-            scannedItems.length === 0 && styles.finalizeButtonDisabled,
+            styles.topRow,
+            {
+              paddingTop: Math.max(insets.top, 8),
+            },
           ]}
         >
-          <Text style={styles.finalizeButtonText}>Finalizar</Text>
-        </Pressable>
-      </View>
+          <Pressable onPress={onBack} style={styles.topActionButton}>
+            <Text style={styles.topActionText}>Volver</Text>
+          </Pressable>
+
+          <View style={styles.modePill}>
+            <Text style={styles.modePillText}>ESCANEAR</Text>
+          </View>
+        </View>
+
+        <ScannerStatusBanner label={bannerLabel} message={bannerMessage} />
+
+        <ScannerGuideOverlay lookupState={lookupState} />
+
+        <View
+          style={[
+            styles.bottomDock,
+            {
+              paddingBottom: Math.max(insets.bottom, 14),
+            },
+          ]}
+        >
+          <Text style={styles.counterText}>
+            {scannedItems.length} producto
+            {scannedItems.length === 1 ? '' : 's'} en lista
+          </Text>
+
+          <Pressable
+            onPress={onFinalize}
+            disabled={scannedItems.length === 0}
+            style={[
+              styles.finalizeButton,
+              scannedItems.length === 0 && styles.finalizeButtonDisabled,
+            ]}
+          >
+            <ReviewIcon />
+            <Text style={styles.finalizeButtonText}>Revisar</Text>
+          </Pressable>
+        </View>
+      </SafeAreaView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  centered: {
+  screen: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: '#1F1A14',
+  },
+  permissionScreen: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     padding: 24,
-    gap: 16,
+    backgroundColor: '#F5F3EF',
   },
-  topActions: {
-    position: 'absolute',
-    top: 16,
-    left: 16,
-    right: 16,
-  },
-  bottomActions: {
-    position: 'absolute',
-    left: 16,
-    right: 16,
-    bottom: 24,
-    gap: 12,
-  },
-  counterText: {
-    color: '#fff',
-    textAlign: 'center',
-    fontSize: 14,
-    fontWeight: '600',
-    backgroundColor: 'rgba(0, 0, 0, 0.55)',
-    paddingVertical: 8,
-    borderRadius: 12,
-  },
-  finalizeButton: {
-    backgroundColor: '#3158ff',
-    borderRadius: 18,
-    paddingVertical: 14,
+  permissionCard: {
+    width: '100%',
+    maxWidth: 360,
+    paddingHorizontal: 22,
+    paddingVertical: 24,
+    borderRadius: 28,
+    backgroundColor: '#FBFAF7',
+    borderWidth: 1,
+    borderColor: '#E8E5DF',
+    shadowColor: '#000000',
+    shadowOpacity: 0.08,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 5,
     alignItems: 'center',
+    gap: 18,
   },
-  finalizeButtonDisabled: {
-    backgroundColor: '#7f92d6',
+  permissionEyebrow: {
+    color: '#7C889F',
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
   },
-  finalizeButtonText: {
-    color: '#fff',
+  permissionButton: {
+    minWidth: 160,
+    borderRadius: 18,
+    backgroundColor: '#1A1A2E',
+    paddingVertical: 14,
+    paddingHorizontal: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  permissionButtonText: {
+    color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '700',
+  },
+  cameraTint: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(28, 22, 16, 0.30)',
+  },
+  overlay: {
+    flex: 1,
+  },
+  topRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 18,
+  },
+  topActionButton: {
+    minHeight: 38,
+    borderRadius: 999,
+    paddingHorizontal: 14,
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255, 251, 245, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 248, 240, 0.22)',
+  },
+  topActionText: {
+    color: '#FFF8F0',
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  modePill: {
+    minHeight: 38,
+    borderRadius: 999,
+    paddingHorizontal: 16,
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255, 251, 245, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 248, 240, 0.22)',
+  },
+  modePillText: {
+    color: '#FFF8F0',
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 0.8,
+  },
+  bottomDock: {
+    position: 'absolute',
+    left: 18,
+    right: 18,
+    bottom: 0,
+    paddingTop: 12,
+    paddingHorizontal: 16,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255, 251, 247, 0.94)',
+    borderWidth: 1,
+    borderColor: '#EFE7DB',
+    shadowColor: '#000000',
+    shadowOpacity: 0.08,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 4,
+  },
+  counterText: {
+    color: '#726A5E',
+    textAlign: 'center',
+    fontSize: 13,
+    fontWeight: '700',
+    marginBottom: 10,
+  },
+  finalizeButton: {
+    height: 48,
+    borderRadius: 18,
+    backgroundColor: '#1A1A2E',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+  },
+  finalizeButtonDisabled: {
+    backgroundColor: '#979AAF',
+  },
+  finalizeButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  reviewIcon: {
+    width: 20,
+    height: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  reviewSheet: {
+    width: 16,
+    height: 18,
+    borderRadius: 4,
+    borderWidth: 1.6,
+    borderColor: '#FFFFFF',
+    paddingTop: 3,
+    paddingHorizontal: 3,
+  },
+  reviewLineLong: {
+    height: 1.6,
+    borderRadius: 999,
+    backgroundColor: '#FFFFFF',
+    marginBottom: 2,
+  },
+  reviewLineShort: {
+    width: 7,
+    height: 1.6,
+    borderRadius: 999,
+    backgroundColor: '#FFFFFF',
+    marginBottom: 3,
+  },
+  reviewCheckWrap: {
+    position: 'relative',
+    width: 8,
+    height: 6,
+  },
+  reviewCheckStem: {
+    position: 'absolute',
+    left: 1,
+    top: 2,
+    width: 3,
+    height: 1.6,
+    backgroundColor: '#FFFFFF',
+    transform: [{ rotate: '45deg' }],
+  },
+  reviewCheckTick: {
+    position: 'absolute',
+    left: 3,
+    top: 1,
+    width: 5,
+    height: 1.6,
+    backgroundColor: '#FFFFFF',
+    transform: [{ rotate: '-45deg' }],
   },
 });

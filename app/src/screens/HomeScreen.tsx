@@ -97,13 +97,7 @@ export function HomeScreen({
           <Text style={styles.title}>Mi despensa :)</Text>
 
           <View style={styles.searchWrap}>
-            <TextInput
-              value={query}
-              onChangeText={setQuery}
-              placeholder="Buscar producto..."
-              placeholderTextColor="#8090AD"
-              style={styles.searchInput}
-            />
+            <TextInput value={query} onChangeText={setQuery} placeholder="Buscar producto..." placeholderTextColor="#8090AD" style={styles.searchInput}/>
           </View>
         </View>
 
@@ -117,20 +111,13 @@ export function HomeScreen({
             <Text style={styles.stateError}>{loadError}</Text>
           </View>
         ) : (
-          <ScrollView
-            style={styles.scroll}
-            contentContainerStyle={styles.scrollContent}
-            showsVerticalScrollIndicator={false}
-          >
+          <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
             {PANTRY_STOCK_ORDER.map(stockBand => {
               const sectionItems = groupedItems[stockBand];
-
               if (sectionItems.length === 0) {
                 return null;
               }
-
               const meta = PANTRY_STOCK_META[stockBand];
-
               return (
                 <PantryShelfSection
                   key={stockBand}
@@ -140,7 +127,6 @@ export function HomeScreen({
                 />
               );
             })}
-
             {filteredItems.length === 0 ? (
               <View style={styles.centerState}>
                 <Text style={styles.stateText}>
@@ -150,14 +136,26 @@ export function HomeScreen({
                 </Text>
               </View>
             ) : null}
-
             <View style={styles.bottomSpacer} />
           </ScrollView>
         )}
 
         <View style={styles.bottomBar}>
           <Pressable style={styles.scanButton} onPress={onStartScanning}>
-            <Text style={styles.scanButtonText}>+</Text>
+            <View style={styles.barcodeIcon}>
+              <View style={[styles.barcodeBar, styles.barcodeThin, styles.barcodeGapNarrow]} />
+              <View style={[styles.barcodeBar, styles.barcodeWide, styles.barcodeGapNarrow]} />
+              <View style={[styles.barcodeBar, styles.barcodeThin, styles.barcodeGapWide]} />
+              <View style={[styles.barcodeBar, styles.barcodeMedium, styles.barcodeGapNarrow]} />
+              <View style={[styles.barcodeBar, styles.barcodeThin, styles.barcodeGapNarrow]} />
+              <View style={[styles.barcodeBar, styles.barcodeWide, styles.barcodeGapWide]} />
+              <View style={[styles.barcodeBar, styles.barcodeThin, styles.barcodeGapNarrow]} />
+              <View style={[styles.barcodeBar, styles.barcodeThin, styles.barcodeGapNarrow]} />
+              <View style={[styles.barcodeBar, styles.barcodeMedium, styles.barcodeGapWide]} />
+              <View style={[styles.barcodeBar, styles.barcodeWide, styles.barcodeGapNarrow]} />
+              <View style={[styles.barcodeBar, styles.barcodeThin, styles.barcodeGapNarrow]} />
+              <View style={[styles.barcodeBar, styles.barcodeMedium]} />
+            </View>
           </Pressable>
         </View>
       </View>
@@ -248,7 +246,8 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderTopWidth: 1,
     borderTopColor: '#ECE8E0',
-    alignItems: 'flex-end',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   scanButton: {
     width: 54,
@@ -260,10 +259,31 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  scanButtonText: {
-    color: '#6F84A7',
-    fontSize: 30,
-    lineHeight: 32,
-    fontWeight: '400',
+  barcodeIcon: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: 22,
   },
+  barcodeBar: {
+    height: 18,
+    backgroundColor: '#6F84A7',
+    borderRadius: 1,
+  },
+  barcodeThin: {
+    width: 2,
+  },
+  barcodeMedium: {
+    width: 3,
+  },
+  barcodeWide: {
+    width: 4,
+  },
+  barcodeGapNarrow: {
+    marginRight: 1,
+  },
+  barcodeGapWide: {
+    marginRight: 3,
+  },
+
 });

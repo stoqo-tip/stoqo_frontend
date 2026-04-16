@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+
 import {
   HomeScreen,
   Onboarding,
@@ -81,7 +83,7 @@ export default function App(): React.JSX.Element {
     if (currentScreen === 'onboarding') {
       return (
         <Onboarding
-          onComplete={(pantry) => {
+          onComplete={pantry => {
             console.log('Despensa inicial:', pantry);
             setCurrentScreen('home');
           }}
@@ -131,7 +133,7 @@ export default function App(): React.JSX.Element {
 
   return (
     <GestureHandlerRootView style={styles.root}>
-      {renderScreen()}
+      <SafeAreaProvider>{renderScreen()}</SafeAreaProvider>
     </GestureHandlerRootView>
   );
 }
