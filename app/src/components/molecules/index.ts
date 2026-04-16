@@ -7,3 +7,4 @@ export * from './ScannedProductReviewRow';
 export * from './JarStepper';
 export * from './ProductRow';
 export * from './OnboardingProgressBar';
+export * from './PantryShelfSection';
