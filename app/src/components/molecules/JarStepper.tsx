@@ -1,49 +1,75 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { AnimatedJar } from '../atoms';
-import { StockKey, STOCK_LEVELS } from '../../constants';
+import { PantryEntry, UnitType, UnitLabel } from '../../constants';
 
-const CYCLE: StockKey[] = ['ignore', 'empty', 'low', 'medium', 'full'];
+const MAX_UNITS = 10;
 
-function nextLevel(current: StockKey | undefined): StockKey {
-  if (!current || current === 'ignore') return 'low';
-  const idx = CYCLE.indexOf(current);
-  return idx < CYCLE.length - 1 ? CYCLE[idx + 1] : current;
-}
-
-function prevLevel(current: StockKey | undefined): StockKey {
-  if (!current) return 'ignore';
-  const idx = CYCLE.indexOf(current);
-  return idx > 0 ? CYCLE[idx - 1] : current;
+function formatTotal(units: number, unitSize: number, unitType: UnitType): string | null {
+  if (unitType === 'count') return null;
+  const total = units * unitSize;
+  if (unitType === 'g') {
+    if (total >= 1000) {
+      const kg = total / 1000;
+      return `${Number.isInteger(kg) ? kg : kg.toFixed(1)}kg`;
+    }
+    return `${total}g`;
+  }
+  if (total >= 1000) {
+    const L = total / 1000;
+    return `${Number.isInteger(L) ? L : L.toFixed(1)}L`;
+  }
+  return `${total}mL`;
 }
 
 interface Props {
-  value: StockKey | undefined;
-  onChange: (level: StockKey) => void;
+  value: PantryEntry | undefined;
+  unitSize: number;
+  unitType: UnitType;
+  unitLabel: UnitLabel;
+  onChange: (entry: PantryEntry | undefined) => void;
 }
 
-export function JarStepper({ value, onChange }: Props) {
-  const canIncrement = value !== 'full';
-  const canDecrement = !!value && value !== 'ignore';
+export function JarStepper({ value, unitSize, unitType, unitLabel, onChange }: Props) {
+  const units = value?.status === 'units' ? value.units : 0;
+  const isIgnore = value?.status === 'ignore';
+  const hasAny = units > 0;
 
-  const levelLabel =
-    value && value !== 'ignore'
-      ? STOCK_LEVELS.find((l) => l.key === value)?.label ?? ''
-      : value === 'ignore'
-      ? 'No consumo'
-      : '';
+  const fillRatio = Math.min(units / 5, 1);
 
-  const labelColor =
-    value === 'ignore'
-      ? '#AAAAAA'
-      : STOCK_LEVELS.find((l) => l.key === value)?.color ?? '#999999';
+  function increment() {
+    onChange({ status: 'units', units: units + 1, unitSize, unitType });
+  }
+
+  function decrement() {
+    if (units <= 1) {
+      onChange(undefined);
+    } else {
+      onChange({ status: 'units', units: units - 1, unitSize, unitType });
+    }
+  }
+
+  const canIncrement = !isIgnore && units < MAX_UNITS;
+  const canDecrement = hasAny;
+
+  const unitText = units === 1 ? unitLabel.singular : unitLabel.plural;
+
+  const labelText = hasAny
+    ? `${units} ${unitText}`
+    : isIgnore
+    ? 'No consumo'
+    : '';
+
+  const labelColor = hasAny ? '#7C6FCD' : isIgnore ? '#AAAAAA' : '#CCCCCC';
+
+  const totalLabel = hasAny ? formatTotal(units, unitSize, unitType) : null;
 
   return (
     <View style={styles.container}>
       <TouchableOpacity
-        onPress={() => onChange(prevLevel(value))}
-        style={[styles.btn, !canDecrement && styles.btnOff]}
+        onPress={decrement}
         disabled={!canDecrement}
+        style={[styles.btn, !canDecrement && styles.btnOff]}
         hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         activeOpacity={0.7}
       >
@@ -51,16 +77,19 @@ export function JarStepper({ value, onChange }: Props) {
       </TouchableOpacity>
 
       <View style={styles.jarWrap}>
-        <AnimatedJar stockKey={value} />
+        <AnimatedJar fillRatio={fillRatio} isIgnore={isIgnore} />
         <Text style={[styles.levelLabel, { color: labelColor }, !value && styles.levelLabelHint]}>
-          {value ? levelLabel : 'toca +'}
+          {value ? labelText : 'toca +'}
         </Text>
+        {totalLabel && (
+          <Text style={styles.totalLabel}>{totalLabel}</Text>
+        )}
       </View>
 
       <TouchableOpacity
-        onPress={() => onChange(nextLevel(value))}
-        style={[styles.btn, !canIncrement && styles.btnOff]}
+        onPress={increment}
         disabled={!canIncrement}
+        style={[styles.btn, !canIncrement && styles.btnOff]}
         hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         activeOpacity={0.7}
       >
@@ -112,5 +141,11 @@ const styles = StyleSheet.create({
   levelLabelHint: {
     color: '#CCCCCC',
     fontWeight: '400',
+  },
+  totalLabel: {
+    fontSize: 8,
+    color: '#AAAAAA',
+    marginTop: 1,
+    letterSpacing: 0.1,
   },
 });

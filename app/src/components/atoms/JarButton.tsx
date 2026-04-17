@@ -1,65 +1,55 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, StyleSheet, View } from 'react-native';
-import { StockKey, STOCK_LEVELS } from '../../constants';
 
 const JAR_W = 46;
 const JAR_H = 56;
 const LID_H = 7;
 const BODY_H = JAR_H - LID_H;
+const FILL_COLOR = '#7C6FCD';
 
 interface Props {
-  stockKey: StockKey | undefined;
+  fillRatio: number;
+  isIgnore: boolean;
 }
 
-function getFill(key: StockKey | undefined): number {
-  if (!key || key === 'ignore') return 0;
-  const level = STOCK_LEVELS.find((l) => l.key === key);
-  if (!level || level.fill === null) return 0;
-  return level.fill === 0 ? 0.05 : level.fill;
-}
-
-function getColor(key: StockKey | undefined): string {
-  if (!key || key === 'ignore') return '#E0E0E0';
-  return STOCK_LEVELS.find((l) => l.key === key)?.color ?? '#E0E0E0';
-}
-
-export function AnimatedJar({ stockKey }: Props) {
-  const fill = getFill(stockKey);
-  const color = getColor(stockKey);
-
-  const fillAnim = useRef(new Animated.Value(fill)).current;
+export function AnimatedJar({ fillRatio, isIgnore }: Props) {
+  const fillAnim = useRef(new Animated.Value(fillRatio)).current;
   const scaleAnim = useRef(new Animated.Value(1)).current;
-  const prevKeyRef = useRef(stockKey);
+  const prevFillRef = useRef(fillRatio);
+  const prevIgnoreRef = useRef(isIgnore);
 
   useEffect(() => {
-    if (prevKeyRef.current !== stockKey) {
-      prevKeyRef.current = stockKey;
+    const changed = prevFillRef.current !== fillRatio || prevIgnoreRef.current !== isIgnore;
+    prevFillRef.current = fillRatio;
+    prevIgnoreRef.current = isIgnore;
+
+    if (changed) {
       Animated.sequence([
         Animated.timing(scaleAnim, { toValue: 1.13, duration: 75, useNativeDriver: true }),
         Animated.spring(scaleAnim, { toValue: 1, tension: 280, friction: 8, useNativeDriver: true }),
       ]).start();
     }
+
     Animated.spring(fillAnim, {
-      toValue: fill,
+      toValue: fillRatio,
       tension: 90,
       friction: 7,
       useNativeDriver: false,
     }).start();
-  }, [fill, stockKey, fillAnim, scaleAnim]);
+  }, [fillRatio, isIgnore, fillAnim, scaleAnim]);
 
   const fillHeight = fillAnim.interpolate({
     inputRange: [0, 1],
     outputRange: ['0%', '100%'],
   });
 
-  const isActive = !!stockKey && stockKey !== 'ignore';
-  const isIgnore = stockKey === 'ignore';
+  const isActive = fillRatio > 0 || isIgnore;
 
   return (
     <Animated.View style={[styles.container, { transform: [{ scale: scaleAnim }] }]}>
       <View style={[styles.lid, isActive ? styles.lidActive : styles.lidInactive]} />
       <View style={[styles.body, isActive ? styles.bodyActive : styles.bodyInactive]}>
-        <Animated.View style={[styles.fill, { height: fillHeight, backgroundColor: color }]} />
+        <Animated.View style={[styles.fill, { height: fillHeight, backgroundColor: FILL_COLOR }]} />
         {isIgnore && (
           <View style={styles.absoluteFill} pointerEvents="none">
             <View style={styles.ignoreWrap}>

@@ -1,23 +1,33 @@
 import React, { memo, useEffect, useRef } from 'react';
 import { Animated, View, Text, StyleSheet, PanResponder } from 'react-native';
 import { JarStepper } from './JarStepper';
-import { Product, StockKey } from '../../constants';
+import { PantryEntry, Product, UnitType, UnitLabel } from '../../constants';
 
 const SWIPE_THRESHOLD = 70;
 const REVEAL_WIDTH = 90;
 
 interface Props {
   product: Product;
-  value: StockKey | undefined;
-  onChange: (productId: string, level: StockKey) => void;
+  unitSize: number;
+  unitType: UnitType;
+  unitLabel: UnitLabel;
+  value: PantryEntry | undefined;
+  onChange: (productId: string, entry: PantryEntry | undefined) => void;
 }
 
-function ProductRowComponent({ product, value, onChange }: Props) {
+function ProductRowComponent({ product, unitSize, unitType, unitLabel, value, onChange }: Props) {
   const translateX = useRef(new Animated.Value(0)).current;
   const stripOpacity = useRef(new Animated.Value(0)).current;
 
   const onChangeRef = useRef(onChange);
   useEffect(() => { onChangeRef.current = onChange; }, [onChange]);
+
+  const unitSizeRef = useRef(unitSize);
+  const unitTypeRef = useRef(unitType);
+  useEffect(() => {
+    unitSizeRef.current = unitSize;
+    unitTypeRef.current = unitType;
+  }, [unitSize, unitType]);
 
   const panResponder = useRef(
     PanResponder.create({
@@ -35,7 +45,12 @@ function ProductRowComponent({ product, value, onChange }: Props) {
             Animated.spring(translateX, { toValue: 0, tension: 75, friction: 7, useNativeDriver: true }),
           ]).start();
           Animated.timing(stripOpacity, { toValue: 0, duration: 300, useNativeDriver: true }).start();
-          onChangeRef.current(product.id, 'ignore');
+          onChangeRef.current(product.id, {
+            status: 'ignore',
+            units: 0,
+            unitSize: unitSizeRef.current,
+            unitType: unitTypeRef.current,
+          });
         } else {
           Animated.spring(translateX, { toValue: 0, tension: 75, friction: 8, useNativeDriver: true }).start();
           Animated.timing(stripOpacity, { toValue: 0, duration: 150, useNativeDriver: true }).start();
@@ -48,7 +63,7 @@ function ProductRowComponent({ product, value, onChange }: Props) {
     })
   ).current;
 
-  const isIgnore = value === 'ignore';
+  const isIgnore = value?.status === 'ignore';
 
   return (
     <View style={styles.outerRow}>
@@ -65,7 +80,10 @@ function ProductRowComponent({ product, value, onChange }: Props) {
         </Text>
         <JarStepper
           value={value}
-          onChange={(level) => onChange(product.id, level)}
+          unitSize={unitSize}
+          unitType={unitType}
+          unitLabel={unitLabel}
+          onChange={(entry) => onChange(product.id, entry)}
         />
       </Animated.View>
     </View>
