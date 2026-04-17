@@ -10,9 +10,9 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CategorySection } from '../components/organisms';
 import { OnboardingProgressBar } from '../components/molecules';
-import { PANTRY_CATEGORIES, StockKey } from '../constants';
+import { PANTRY_CATEGORIES, PantryEntry } from '../constants';
 
-export type PantryState = Record<string, StockKey>;
+export type PantryState = Record<string, PantryEntry>;
 
 interface Props {
   onComplete: (pantry: PantryState) => void;
@@ -25,14 +25,21 @@ export function Onboarding({ onComplete, onSkip }: Props) {
   const allProducts = PANTRY_CATEGORIES.flatMap((c) => c.products);
   const filledCount = Object.keys(pantry).length;
 
-  const handleUpdate = useCallback((productId: string, level: StockKey) => {
-    setPantry((prev) => ({ ...prev, [productId]: level }));
+  const handleUpdate = useCallback((productId: string, entry: PantryEntry | undefined) => {
+    setPantry((prev) => {
+      if (entry === undefined) {
+        const next = { ...prev };
+        delete next[productId];
+        return next;
+      }
+      return { ...prev, [productId]: entry };
+    });
   }, []);
 
   function handleComplete() {
     const result: PantryState = {};
-    for (const [id, level] of Object.entries(pantry)) {
-      if (level !== 'ignore') result[id] = level as StockKey;
+    for (const [id, entry] of Object.entries(pantry)) {
+      if (entry.status !== 'ignore') result[id] = entry;
     }
     onComplete(result);
   }

@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet } from 'react-native';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { StyleSheet, View } from 'react-native';
 import {
   HomeScreen,
   Onboarding,
@@ -130,9 +129,9 @@ export default function App(): React.JSX.Element {
   };
 
   return (
-    <GestureHandlerRootView style={styles.root}>
+    <View style={styles.root}>
       {renderScreen()}
-    </GestureHandlerRootView>
+    </View>
   );
 }
 

@@ -1,12 +1,12 @@
 import React, { memo, useEffect, useRef, useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { CategoryHeader, CategoryLegend, ProductRow } from '../molecules';
-import { Category, StockKey } from '../../constants';
+import { Category, PantryEntry, CATEGORY_DEFAULTS } from '../../constants';
 
 interface Props {
   category: Category;
-  pantry: Record<string, StockKey>;
-  onUpdate: (productId: string, level: StockKey) => void;
+  pantry: Record<string, PantryEntry>;
+  onUpdate: (productId: string, entry: PantryEntry | undefined) => void;
 }
 
 function CategorySectionComponent({ category, pantry, onUpdate }: Props) {
@@ -29,6 +29,8 @@ function CategorySectionComponent({ category, pantry, onUpdate }: Props) {
     prevFilledRef.current = filledCount;
   }, [filledCount, total]);
 
+  const categoryDefault = CATEGORY_DEFAULTS[category.id] ?? CATEGORY_DEFAULTS['default'];
+
   return (
     <View style={[styles.container, completed && styles.containerCompleted]}>
       <CategoryHeader
@@ -42,14 +44,22 @@ function CategorySectionComponent({ category, pantry, onUpdate }: Props) {
       {!collapsed && (
         <>
           <CategoryLegend />
-          {category.products.map((product) => (
-            <ProductRow
-              key={product.id}
-              product={product}
-              value={pantry[product.id]}
-              onChange={onUpdate}
-            />
-          ))}
+          {category.products.map((product) => {
+            const unitSize  = product.unitSize  ?? categoryDefault.unitSize;
+            const unitType  = product.unitType  ?? categoryDefault.unitType;
+            const unitLabel = product.unitLabel ?? categoryDefault.unitLabel;
+            return (
+              <ProductRow
+                key={product.id}
+                product={product}
+                unitSize={unitSize}
+                unitType={unitType}
+                unitLabel={unitLabel}
+                value={pantry[product.id]}
+                onChange={onUpdate}
+              />
+            );
+          })}
         </>
       )}
     </View>
