@@ -27,7 +27,7 @@ export function HomeScreen({
   onStartScanning,
 }: HomeScreenProps): React.JSX.Element {
   const [items, setItems] = useState<PantryItem[]>([]);
-  const [query, setQuery] = useState('');
+  const [searchText, setSearchText] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
 
@@ -62,18 +62,18 @@ export function HomeScreen({
     };
   }, []);
 
-  const normalizedQuery = query.trim().toLowerCase();
+  const normalizedSearchText = searchText.trim().toLowerCase();
 
   const filteredItems = useMemo(() => {
-    if (!normalizedQuery) {
+    if (!normalizedSearchText) {
       return items;
     }
 
     return items.filter(item => {
       const haystack = `${item.name} ${item.brand ?? ''}`.toLowerCase();
-      return haystack.includes(normalizedQuery);
+      return haystack.includes(normalizedSearchText);
     });
-  }, [items, normalizedQuery]);
+  }, [items, normalizedSearchText]);
 
   const groupedItems = useMemo(() => {
     const groups = {
@@ -97,7 +97,7 @@ export function HomeScreen({
           <Text style={styles.title}>Mi despensa :)</Text>
 
           <View style={styles.searchWrap}>
-            <TextInput value={query} onChangeText={setQuery} placeholder="Buscar producto..." placeholderTextColor="#8090AD" style={styles.searchInput}/>
+            <TextInput value={searchText} onChangeText={setSearchText} placeholder="Buscar producto..." placeholderTextColor="#8090AD" style={styles.searchInput}/>
           </View>
         </View>
 
