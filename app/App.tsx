@@ -1,13 +1,18 @@
 import React, { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+
 import {
   HomeScreen,
   Onboarding,
   ScannerScreen,
   ScannedProductsReviewScreen,
 } from './src/screens';
-import { saveScannedItemsToPantry } from './src/services';
+import { saveOnboardingItemsToPantry, saveScannedItemsToPantry } from './src/services';
+import type { PantryState } from './src/screens';
 import type { ScannedProductItem } from './src/types';
+
 
 type Screen = 'onboarding' | 'home' | 'scanner' | 'review';
 
@@ -16,6 +21,8 @@ export default function App(): React.JSX.Element {
   const [scannedItems, setScannedItems] = useState<ScannedProductItem[]>([]);
   const [isSavingPantry, setIsSavingPantry] = useState(false);
   const [reviewSaveError, setReviewSaveError] = useState<string | null>(null);
+  const [isSavingOnboarding, setIsSavingOnboarding] = useState(false);
+  const [onboardingSaveError, setOnboardingSaveError] = useState<string | null>(null);
 
   const handleStartScanning = () => {
     setReviewSaveError(null);
@@ -76,15 +83,33 @@ export default function App(): React.JSX.Element {
     }
   };
 
+  const handleCompleteOnboarding = async (pantry: PantryState) => {
+    if (isSavingOnboarding) {
+      return;
+    }
+
+    setIsSavingOnboarding(true);
+    setOnboardingSaveError(null);
+
+    try {
+      await saveOnboardingItemsToPantry(pantry);
+      setCurrentScreen('home');
+    } catch {
+      setOnboardingSaveError('No pudimos guardar la alacena inicial.');
+    } finally {
+      setIsSavingOnboarding(false);
+    }
+  };
+
+
   const renderScreen = (): React.JSX.Element => {
     if (currentScreen === 'onboarding') {
       return (
         <Onboarding
-          onComplete={(pantry) => {
-            console.log('Despensa inicial:', pantry);
-            setCurrentScreen('home');
-          }}
+          onComplete={handleCompleteOnboarding}
           onSkip={() => setCurrentScreen('home')}
+          isSaving={isSavingOnboarding}
+          saveError={onboardingSaveError}
         />
       );
     }
@@ -129,9 +154,9 @@ export default function App(): React.JSX.Element {
   };
 
   return (
-    <View style={styles.root}>
-      {renderScreen()}
-    </View>
+    <GestureHandlerRootView style={styles.root}>
+      <SafeAreaProvider>{renderScreen()}</SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }
 

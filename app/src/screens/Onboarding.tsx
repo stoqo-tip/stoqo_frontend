@@ -15,11 +15,15 @@ import { PANTRY_CATEGORIES, PantryEntry } from '../constants';
 export type PantryState = Record<string, PantryEntry>;
 
 interface Props {
-  onComplete: (pantry: PantryState) => void;
+  onComplete: (pantry: PantryState) => void | Promise<void>;
   onSkip?: () => void;
+  isSaving?: boolean;
+  saveError?: string | null;
 }
 
-export function Onboarding({ onComplete, onSkip }: Props) {
+
+export function Onboarding({ onComplete, onSkip, isSaving = false, saveError = null }: Props) {
+
   const [pantry, setPantry] = useState<PantryState>({});
 
   const allProducts = PANTRY_CATEGORIES.flatMap((c) => c.products);
@@ -37,12 +41,17 @@ export function Onboarding({ onComplete, onSkip }: Props) {
   }, []);
 
   function handleComplete() {
+    if (isSaving) {
+      return;
+    }
+
     const result: PantryState = {};
     for (const [id, entry] of Object.entries(pantry)) {
       if (entry.status !== 'ignore') result[id] = entry;
     }
     onComplete(result);
   }
+
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -54,7 +63,7 @@ export function Onboarding({ onComplete, onSkip }: Props) {
           <Text style={styles.subtitle}>Marcá lo que tenés en casa ahora mismo</Text>
         </View>
         {onSkip && (
-          <TouchableOpacity onPress={onSkip} style={styles.skipBtn}>
+          <TouchableOpacity onPress={onSkip} style={styles.skipBtn} disabled={isSaving}>
             <Text style={styles.skipText}>Omitir</Text>
           </TouchableOpacity>
         )}
@@ -79,17 +88,20 @@ export function Onboarding({ onComplete, onSkip }: Props) {
       </ScrollView>
 
       <View style={styles.ctaContainer}>
+        {saveError ? <Text style={styles.errorText}>{saveError}</Text> : null}
+
         <TouchableOpacity
-          style={[styles.ctaBtn, filledCount === 0 && styles.ctaBtnDisabled]}
+          style={[styles.ctaBtn, (filledCount === 0 || isSaving) && styles.ctaBtnDisabled]}
           onPress={handleComplete}
-          disabled={filledCount === 0}
+          disabled={filledCount === 0 || isSaving}
           activeOpacity={0.85}
         >
           <Text style={styles.ctaText}>
-            {filledCount === 0 ? 'Marcá al menos un producto' : 'Listo — guardar despensa'}
+            {isSaving ? 'Guardando despensa...' : filledCount === 0 ? 'Marcá al menos un producto' : 'Listo - guardar despensa'}
           </Text>
         </TouchableOpacity>
       </View>
+
     </SafeAreaView>
   );
 }
@@ -146,6 +158,12 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: '#EFEFEF',
     backgroundColor: '#FAFAF8',
+  },
+    errorText: {
+    fontSize: 13,
+    color: '#B33A3A',
+    textAlign: 'center',
+    marginBottom: 10,
   },
   ctaBtn: {
     backgroundColor: '#1A1A2E',

@@ -1,11 +1,6 @@
 import React, { useEffect, useMemo, useRef } from 'react';
 import { Animated, Easing, StyleSheet, Text, View } from 'react-native';
 
-import {
-   SCAN_GUIDE_HEIGHT,
-   SCAN_GUIDE_WIDTH_RATIO,
-} from '../../constants';
-
 export type ScannerFeedbackState =
    | 'idle'
    | 'loading'
@@ -24,11 +19,11 @@ export function ScannerGuideOverlay({
 
    const feedback = useMemo(() => {
       if (lookupState === 'success') {
-         return { symbol: '\u2713', color: '#51d97b' };
+         return { symbol: '\u2713', color: '#51D97B' };
       }
 
       if (lookupState === 'not-found' || lookupState === 'error') {
-         return { symbol: '\u2715', color: '#ff5f5f' };
+         return { symbol: '\u2715', color: '#FF6A6A' };
       }
 
       return null;
@@ -46,7 +41,7 @@ export function ScannerGuideOverlay({
          Animated.delay(700),
          Animated.timing(feedbackOpacity, {
             toValue: 0,
-            duration: 2200,
+            duration: 1800,
             easing: Easing.out(Easing.cubic),
             useNativeDriver: true,
          }),
@@ -86,75 +81,67 @@ const styles = StyleSheet.create({
       justifyContent: 'center',
    },
    scanGuide: {
-      width: `${SCAN_GUIDE_WIDTH_RATIO * 100}%`,
-      maxWidth: 360,
-      height: SCAN_GUIDE_HEIGHT,
-      borderRadius: 24,
+      width: '66%',
+      maxWidth: 280,
+      height: 150,
+      borderRadius: 18,
       alignItems: 'center',
       justifyContent: 'center',
+      marginTop: 18,
    },
    corner: {
       position: 'absolute',
-      width: 34,
-      height: 34,
-      borderColor: '#ff8f2a',
-      shadowColor: '#ff8f2a',
-      shadowOpacity: 0.6,
-      shadowRadius: 10,
-      shadowOffset: { width: 0, height: 0 },
-      elevation: 6,
+      width: 26,
+      height: 26,
+      borderColor: '#FF9A32',
    },
    cornerTopLeft: {
       top: 0,
       left: 0,
       borderTopWidth: 3,
       borderLeftWidth: 3,
-      borderTopLeftRadius: 20,
+      borderTopLeftRadius: 14,
    },
    cornerTopRight: {
       top: 0,
       right: 0,
       borderTopWidth: 3,
       borderRightWidth: 3,
-      borderTopRightRadius: 20,
+      borderTopRightRadius: 14,
    },
    cornerBottomLeft: {
       bottom: 0,
       left: 0,
       borderBottomWidth: 3,
       borderLeftWidth: 3,
-      borderBottomLeftRadius: 20,
+      borderBottomLeftRadius: 14,
    },
    cornerBottomRight: {
       bottom: 0,
       right: 0,
       borderBottomWidth: 3,
       borderRightWidth: 3,
-      borderBottomRightRadius: 20,
+      borderBottomRightRadius: 14,
    },
    centerLine: {
-      width: '78%',
-      height: 1.5,
-      backgroundColor: 'rgba(255, 143, 42, 0.85)',
-      shadowColor: '#ff8f2a',
-      shadowOpacity: 0.65,
-      shadowRadius: 8,
-      shadowOffset: { width: 0, height: 0 },
-      elevation: 3,
+      width: '68%',
+      height: 2,
+      borderRadius: 999,
+      backgroundColor: 'rgba(255, 154, 50, 0.92)',
    },
    feedbackBadge: {
       position: 'absolute',
-      width: 108,
-      height: 108,
-      borderRadius: 54,
-      backgroundColor: 'rgba(8, 10, 16, 0.42)',
+      width: 76,
+      height: 76,
+      borderRadius: 38,
+      backgroundColor: 'rgba(8, 10, 16, 0.22)',
       borderWidth: 2,
       alignItems: 'center',
       justifyContent: 'center',
    },
    feedbackSymbol: {
-      fontSize: 62,
+      fontSize: 42,
       fontWeight: '700',
-      lineHeight: 68,
+      lineHeight: 46,
    },
 });
