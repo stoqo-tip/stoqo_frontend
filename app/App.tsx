@@ -9,8 +9,10 @@ import {
   ScannerScreen,
   ScannedProductsReviewScreen,
 } from './src/screens';
-import { saveScannedItemsToPantry } from './src/services';
+import { saveOnboardingItemsToPantry, saveScannedItemsToPantry } from './src/services';
+import type { PantryState } from './src/screens';
 import type { ScannedProductItem } from './src/types';
+
 
 type Screen = 'onboarding' | 'home' | 'scanner' | 'review';
 
@@ -19,6 +21,8 @@ export default function App(): React.JSX.Element {
   const [scannedItems, setScannedItems] = useState<ScannedProductItem[]>([]);
   const [isSavingPantry, setIsSavingPantry] = useState(false);
   const [reviewSaveError, setReviewSaveError] = useState<string | null>(null);
+  const [isSavingOnboarding, setIsSavingOnboarding] = useState(false);
+  const [onboardingSaveError, setOnboardingSaveError] = useState<string | null>(null);
 
   const handleStartScanning = () => {
     setReviewSaveError(null);
@@ -79,15 +83,33 @@ export default function App(): React.JSX.Element {
     }
   };
 
+  const handleCompleteOnboarding = async (pantry: PantryState) => {
+    if (isSavingOnboarding) {
+      return;
+    }
+
+    setIsSavingOnboarding(true);
+    setOnboardingSaveError(null);
+
+    try {
+      await saveOnboardingItemsToPantry(pantry);
+      setCurrentScreen('home');
+    } catch {
+      setOnboardingSaveError('No pudimos guardar la alacena inicial.');
+    } finally {
+      setIsSavingOnboarding(false);
+    }
+  };
+
+
   const renderScreen = (): React.JSX.Element => {
     if (currentScreen === 'onboarding') {
       return (
         <Onboarding
-          onComplete={pantry => {
-            console.log('Despensa inicial:', pantry);
-            setCurrentScreen('home');
-          }}
+          onComplete={handleCompleteOnboarding}
           onSkip={() => setCurrentScreen('home')}
+          isSaving={isSavingOnboarding}
+          saveError={onboardingSaveError}
         />
       );
     }
