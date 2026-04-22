@@ -24,7 +24,8 @@ export interface Product {
 export interface Category {
   id: string;
   label: string;
-  emoji: string;
+  icon: string;
+  color: string;
   products: Product[];
 }
 
@@ -51,7 +52,8 @@ export const PANTRY_CATEGORIES: Category[] = [
   {
     id: 'pastas',
     label: 'Pastas y cereales',
-    emoji: '🍝',
+    icon: 'pasta',
+    color: '#D4845A',
     products: [
       { id: 'fideos_spaghetti', name: 'Fideos spaghetti', unitSize: 500,  unitType: 'g',  unitLabel: { singular: 'paquete', plural: 'paquetes' } },
       { id: 'fideos_mostachol', name: 'Mostachol',        unitSize: 500,  unitType: 'g',  unitLabel: { singular: 'paquete', plural: 'paquetes' } },
@@ -64,7 +66,8 @@ export const PANTRY_CATEGORIES: Category[] = [
   {
     id: 'harinas',
     label: 'Harinas y panificados',
-    emoji: '🌾',
+    icon: 'bread-slice',
+    color: '#C49A3C',
     products: [
       { id: 'harina_000',      name: 'Harina 000',     unitSize: 1000, unitType: 'g', unitLabel: { singular: 'bolsa',    plural: 'bolsas'    } },
       { id: 'harina_integral', name: 'Harina integral', unitSize: 1000, unitType: 'g', unitLabel: { singular: 'bolsa',    plural: 'bolsas'    } },
@@ -76,7 +79,8 @@ export const PANTRY_CATEGORIES: Category[] = [
   {
     id: 'conservas',
     label: 'Conservas y enlatados',
-    emoji: '🥫',
+    icon: 'food-fork-drink',
+    color: '#B05555',
     products: [
       { id: 'atun',            name: 'Atún',            unitSize: 170, unitType: 'g', unitLabel: { singular: 'lata',  plural: 'latas'  } },
       { id: 'tomate_triturado',name: 'Tomate triturado', unitSize: 400, unitType: 'g', unitLabel: { singular: 'tetrapak', plural: 'tetrapaks' } },
@@ -88,7 +92,8 @@ export const PANTRY_CATEGORIES: Category[] = [
   {
     id: 'lacteos',
     label: 'Lácteos y huevos',
-    emoji: '🥛',
+    icon: 'cow',
+    color: '#5E8FA3',
     products: [
       { id: 'leche',         name: 'Leche',         unitSize: 1000, unitType: 'ml',    unitLabel: { singular: 'sachet', plural: 'sachets' } },
       { id: 'yogur',         name: 'Yogur',         unitSize: 200,  unitType: 'g',     unitLabel: { singular: 'pote',   plural: 'potes'   } },
@@ -100,7 +105,8 @@ export const PANTRY_CATEGORIES: Category[] = [
   {
     id: 'frescos',
     label: 'Frutas y verduras',
-    emoji: '🥦',
+    icon: 'food-apple',
+    color: '#5A8A4A',
     products: [
       { id: 'tomate',  name: 'Tomate',  unitSize: 1000, unitType: 'g',     unitLabel: { singular: 'kilo',   plural: 'kilos'   } },
       { id: 'lechuga', name: 'Lechuga', unitSize: 1,    unitType: 'count', unitLabel: { singular: 'unidad', plural: 'unidades'} },
@@ -113,7 +119,8 @@ export const PANTRY_CATEGORIES: Category[] = [
   {
     id: 'carnes',
     label: 'Carnes y proteínas',
-    emoji: '🥩',
+    icon: 'food-steak',
+    color: '#C8392B',
     products: [
       { id: 'carne_molida', name: 'Carne molida', unitSize: 500,  unitType: 'g', unitLabel: { singular: 'paquete', plural: 'paquetes' } },
       { id: 'pollo',        name: 'Pollo',        unitSize: 1000, unitType: 'g', unitLabel: { singular: 'unidad',  plural: 'unidades' } },
@@ -125,7 +132,8 @@ export const PANTRY_CATEGORIES: Category[] = [
   {
     id: 'bebidas',
     label: 'Bebidas',
-    emoji: '🧃',
+    icon: 'bottle-soda',
+    color: '#3A7CA5',
     products: [
       { id: 'agua',    name: 'Agua mineral', unitSize: 2000, unitType: 'ml', unitLabel: { singular: 'botella', plural: 'botellas' } },
       { id: 'jugo',    name: 'Jugo en polvo',unitSize: 20,   unitType: 'g',  unitLabel: { singular: 'sobre',   plural: 'sobres'   } },
@@ -138,7 +146,8 @@ export const PANTRY_CATEGORIES: Category[] = [
   {
     id: 'limpieza',
     label: 'Limpieza del hogar',
-    emoji: '🧹',
+    icon: 'spray-bottle',
+    color: '#5B8A8A',
     products: [
       { id: 'detergente',      name: 'Detergente',       unitSize: 750,  unitType: 'ml',    unitLabel: { singular: 'botella', plural: 'botellas' } },
       { id: 'lavandina',       name: 'Lavandina',        unitSize: 1000, unitType: 'ml',    unitLabel: { singular: 'botella', plural: 'botellas' } },
@@ -150,7 +159,8 @@ export const PANTRY_CATEGORIES: Category[] = [
   {
     id: 'personal',
     label: 'Cuidado personal',
-    emoji: '🧴',
+    icon: 'lotion',
+    color: '#8A6A9A',
     products: [
       { id: 'shampoo',       name: 'Shampoo',       unitSize: 400, unitType: 'ml', unitLabel: { singular: 'frasco', plural: 'frascos' } },
       { id: 'jabon_liquido', name: 'Jabón líquido', unitSize: 300, unitType: 'ml', unitLabel: { singular: 'frasco', plural: 'frascos' } },

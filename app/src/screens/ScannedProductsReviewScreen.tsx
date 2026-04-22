@@ -116,7 +116,7 @@ const styles = StyleSheet.create({
    topActionText: {
       fontSize: 16,
       fontWeight: '600',
-      color: '#3158ff',
+      color: '#C8392B',
    },
    skipBtn: {
       paddingVertical: 6,

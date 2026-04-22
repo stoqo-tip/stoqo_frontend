@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { MaterialDesignIcons } from '@react-native-vector-icons/material-design-icons/static';
 import { Category } from '../../constants';
 
 interface Props {
@@ -15,7 +16,9 @@ export function CategoryHeader({ category, filledCount, total, collapsed, comple
   return (
     <TouchableOpacity style={styles.container} onPress={onToggle} activeOpacity={0.8}>
       <View style={styles.left}>
-        <Text style={styles.emoji}>{category.emoji}</Text>
+        <View style={[styles.iconBadge, { backgroundColor: category.color + '22' }]}>
+          <MaterialDesignIcons name={category.icon} size={20} color={category.color} />
+        </View>
         <Text style={styles.label}>{category.label}</Text>
       </View>
       <View style={styles.right}>
@@ -24,7 +27,11 @@ export function CategoryHeader({ category, filledCount, total, collapsed, comple
         ) : filledCount > 0 ? (
           <Text style={styles.count}>{filledCount}/{total}</Text>
         ) : null}
-        <Text style={styles.chevron}>{collapsed ? '›' : '⌄'}</Text>
+        <MaterialDesignIcons
+          name={collapsed ? 'chevron-right' : 'chevron-down'}
+          size={20}
+          color="#B0A090"
+        />
       </View>
     </TouchableOpacity>
   );
@@ -43,13 +50,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 10,
   },
-  emoji: {
-    fontSize: 22,
+  iconBadge: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   label: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#1A1A2E',
+    color: '#1A0E08',
   },
   right: {
     flexDirection: 'row',
@@ -58,16 +69,12 @@ const styles = StyleSheet.create({
   },
   count: {
     fontSize: 13,
-    color: '#4CAF82',
+    color: '#C8392B',
     fontWeight: '600',
   },
   completedText: {
     fontSize: 13,
-    color: '#4CAF82',
+    color: '#C8392B',
     fontWeight: '700',
-  },
-  chevron: {
-    fontSize: 20,
-    color: '#BDBDBD',
   },
 });
