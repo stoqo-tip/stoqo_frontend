@@ -1,3 +1,4 @@
+import { useNavigation } from '@react-navigation/native';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import {
@@ -18,16 +19,10 @@ import {
   ScannerStatusBanner,
   type ScannerFeedbackState,
 } from '../components/molecules';
+import { useScanContext } from '../context/ScanContext';
+import { Routes, type RootStackNavigationProp } from '../navigation/types';
 import { fetchProductByBarcode } from '../services';
-import type { ScannedProductItem } from '../types';
 import { isValidEAN } from '../utils';
-
-type ScannerScreenProps = {
-  onBack: () => void;
-  onFinalize: () => void;
-  scannedItems: ScannedProductItem[];
-  onAddScannedItem: (item: ScannedProductItem) => void;
-};
 
 const DEFAULT_LABEL = 'Apunta al codigo EAN-13 o EAN-8';
 const SWITCH_CONFIRMATIONS = 2;
@@ -81,12 +76,10 @@ function ReviewIcon(): React.JSX.Element {
   );
 }
 
-export function ScannerScreen({
-  onBack,
-  onFinalize,
-  scannedItems,
-  onAddScannedItem,
-}: ScannerScreenProps): React.JSX.Element {
+export function ScannerScreen(): React.JSX.Element {
+  const navigation = useNavigation<RootStackNavigationProp>();
+  const { scannedItems, addItem } = useScanContext();
+
   const device = useCameraDevice('back');
   const { hasPermission, requestPermission } = useCameraPermission();
   const insets = useSafeAreaInsets();
@@ -128,7 +121,7 @@ export function ScannerScreen({
         }
 
         if (result.found && result.product) {
-          onAddScannedItem({
+          addItem({
             barcode: result.product.barcode,
             name: result.product.name ?? result.product.barcode,
             brand: result.product.brand,
@@ -153,7 +146,7 @@ export function ScannerScreen({
         setBannerMessage('Error consultando el backend');
       }
     },
-    [onAddScannedItem, scannedBarcodeSet],
+    [addItem, scannedBarcodeSet],
   );
 
   const codeScanner = useCodeScanner({
@@ -243,7 +236,7 @@ export function ScannerScreen({
             },
           ]}
         >
-          <Pressable onPress={onBack} style={styles.topActionButton}>
+          <Pressable onPress={() => navigation.navigate(Routes.Home)} style={styles.topActionButton}>
             <Text style={styles.topActionText}>Volver</Text>
           </Pressable>
 
@@ -270,7 +263,7 @@ export function ScannerScreen({
           </Text>
 
           <Pressable
-            onPress={onFinalize}
+            onPress={() => navigation.navigate(Routes.Review)}
             disabled={scannedItems.length === 0}
             style={[
               styles.finalizeButton,

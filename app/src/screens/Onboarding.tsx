@@ -1,3 +1,4 @@
+import { useNavigation } from '@react-navigation/native';
 import React, { useCallback, useState } from 'react';
 import {
   View,
@@ -8,23 +9,21 @@ import {
   StyleSheet,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
 import { CategorySection } from '../components/organisms';
 import { OnboardingProgressBar } from '../components/molecules';
 import { PANTRY_CATEGORIES, PantryEntry } from '../constants';
+import { Routes, type RootStackNavigationProp } from '../navigation/types';
+import { saveOnboardingItemsToPantry } from '../services';
 
 export type PantryState = Record<string, PantryEntry>;
 
-interface Props {
-  onComplete: (pantry: PantryState) => void | Promise<void>;
-  onSkip?: () => void;
-  isSaving?: boolean;
-  saveError?: string | null;
-}
-
-
-export function Onboarding({ onComplete, onSkip, isSaving = false, saveError = null }: Props) {
+export function Onboarding() {
+  const navigation = useNavigation<RootStackNavigationProp>();
 
   const [pantry, setPantry] = useState<PantryState>({});
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   const allProducts = PANTRY_CATEGORIES.flatMap((c) => c.products);
   const filledCount = Object.keys(pantry).length;
@@ -40,18 +39,25 @@ export function Onboarding({ onComplete, onSkip, isSaving = false, saveError = n
     });
   }, []);
 
-  function handleComplete() {
-    if (isSaving) {
-      return;
-    }
+  const handleComplete = async () => {
+    if (isSaving) return;
 
     const result: PantryState = {};
     for (const [id, entry] of Object.entries(pantry)) {
       if (entry.status !== 'ignore') result[id] = entry;
     }
-    onComplete(result);
-  }
 
+    setIsSaving(true);
+    setSaveError(null);
+    try {
+      await saveOnboardingItemsToPantry(result);
+      navigation.replace(Routes.Home);
+    } catch {
+      setSaveError('No pudimos guardar la alacena inicial.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -62,11 +68,13 @@ export function Onboarding({ onComplete, onSkip, isSaving = false, saveError = n
           <Text style={styles.title}>Tu alacena</Text>
           <Text style={styles.subtitle}>Marcá lo que tenés en casa ahora mismo</Text>
         </View>
-        {onSkip && (
-          <TouchableOpacity onPress={onSkip} style={styles.skipBtn} disabled={isSaving}>
-            <Text style={styles.skipText}>Omitir</Text>
-          </TouchableOpacity>
-        )}
+        <TouchableOpacity
+          onPress={() => navigation.replace(Routes.Home)}
+          style={styles.skipBtn}
+          disabled={isSaving}
+        >
+          <Text style={styles.skipText}>Omitir</Text>
+        </TouchableOpacity>
       </View>
 
       <OnboardingProgressBar total={allProducts.length} filled={filledCount} />
@@ -159,7 +167,7 @@ const styles = StyleSheet.create({
     borderTopColor: '#EFEFEF',
     backgroundColor: '#FAFAF8',
   },
-    errorText: {
+  errorText: {
     fontSize: 13,
     color: '#B33A3A',
     textAlign: 'center',

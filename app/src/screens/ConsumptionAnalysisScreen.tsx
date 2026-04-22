@@ -1,3 +1,4 @@
+import { useNavigation } from '@react-navigation/native';
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -9,12 +10,9 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import type { RootStackNavigationProp } from '../navigation/types';
 import type { ConsumptionProduct } from '../services/consumptionApi';
 import { fetchConsumptionAnalysis } from '../services/consumptionApi';
-
-type Props = {
-  onBack: () => void;
-};
 
 type Urgency = { bg: string; textColor: string; label: string };
 
@@ -63,7 +61,8 @@ function StatItem({ label, value }: { label: string; value: string }) {
   );
 }
 
-export function ConsumptionAnalysisScreen({ onBack }: Props): React.JSX.Element {
+export function ConsumptionAnalysisScreen(): React.JSX.Element {
+  const navigation = useNavigation<RootStackNavigationProp>();
   const [products, setProducts] = useState<ConsumptionProduct[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -93,7 +92,7 @@ export function ConsumptionAnalysisScreen({ onBack }: Props): React.JSX.Element 
       <View style={styles.shell}>
 
         <View style={styles.header}>
-          <Pressable onPress={onBack} style={styles.backButton} hitSlop={12}>
+          <Pressable onPress={() => navigation.goBack()} style={styles.backButton} hitSlop={12}>
             <Text style={styles.backArrow}>←</Text>
           </Pressable>
           <Text style={styles.title}>Mis hábitos</Text>
