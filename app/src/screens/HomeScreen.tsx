@@ -16,7 +16,7 @@ import {
   PANTRY_STOCK_ORDER,
   getPantryStockBand,
 } from '../constants';
-import { fetchPantryItems } from '../services';
+import { deletePantryItem, fetchPantryItems } from '../services';
 import type { PantryItem } from '../types';
 
 type HomeScreenProps = {
@@ -61,6 +61,18 @@ export function HomeScreen({
       isMounted = false;
     };
   }, []);
+
+  const handleDeleteItem = async (productCode: string) => {
+    setItems(prev => prev.filter(i => i.productCode !== productCode));
+    try {
+      await deletePantryItem(productCode);
+    } catch {
+      const pantryItems = await fetchPantryItems().catch(() => null);
+      if (pantryItems) {
+        setItems(pantryItems);
+      }
+    }
+  };
 
   const normalizedSearchText = searchText.trim().toLowerCase();
 
@@ -124,6 +136,7 @@ export function HomeScreen({
                   title={meta.label}
                   chipBackground={meta.chipBackground}
                   items={sectionItems}
+                  onDeleteItem={handleDeleteItem}
                 />
               );
             })}

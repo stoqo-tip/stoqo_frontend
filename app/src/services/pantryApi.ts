@@ -83,6 +83,17 @@ export async function saveScannedItemsToPantry(
    }
 }
 
+export async function deletePantryItem(productCode: string): Promise<void> {
+   const response = await fetch(
+      `${API_BASE_URL}/pantry/users/${DEFAULT_USER_ID}/items/${encodeURIComponent(productCode)}`,
+      { method: 'DELETE' },
+   );
+
+   if (!response.ok) {
+      throw new Error(`Backend error: ${response.status}`);
+   }
+}
+
 export async function saveOnboardingItemsToPantry(
    pantry: PantryState,
 ): Promise<void> {

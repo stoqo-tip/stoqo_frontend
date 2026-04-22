@@ -1,5 +1,5 @@
 import React from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { PantryStockJar } from '../atoms';
 import type { PantryItem } from '../../types';
@@ -8,12 +8,14 @@ type Props = {
    title: string;
    chipBackground: string;
    items: PantryItem[];
+   onDeleteItem?: (productCode: string) => void;
 };
 
 export function PantryShelfSection({
    title,
    chipBackground,
    items,
+   onDeleteItem,
 }: Props): React.JSX.Element {
    const showSwipeHint = items.length > 1;
 
@@ -35,13 +37,30 @@ export function PantryShelfSection({
                ]}
             >
                {items.map(item => (
-                  <View key={item.productCode} style={styles.productCard}>
+                  <Pressable
+                     key={item.productCode}
+                     style={styles.productCard}
+                     onLongPress={() => {
+                        Alert.alert(
+                           'Eliminar producto',
+                           `¿Eliminar "${item.name}" de tu despensa?`,
+                           [
+                              { text: 'Cancelar', style: 'cancel' },
+                              {
+                                 text: 'Eliminar',
+                                 style: 'destructive',
+                                 onPress: () => onDeleteItem?.(item.productCode),
+                              },
+                           ],
+                        );
+                     }}
+                  >
                      <View style={styles.jarShadow} />
                      <PantryStockJar quantity={item.quantity} />
                      <Text numberOfLines={1} style={styles.productName}>
                         {item.name}
                      </Text>
-                  </View>
+                  </Pressable>
                ))}
             </ScrollView>
             {showSwipeHint ? (
