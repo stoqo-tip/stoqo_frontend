@@ -4,6 +4,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import {
+  ConsumptionAnalysisScreen,
   HomeScreen,
   Onboarding,
   ScannerScreen,
@@ -14,7 +15,7 @@ import type { PantryState } from './src/screens';
 import type { ScannedProductItem } from './src/types';
 
 
-type Screen = 'onboarding' | 'home' | 'scanner' | 'review';
+type Screen = 'onboarding' | 'home' | 'scanner' | 'review' | 'analysis';
 
 export default function App(): React.JSX.Element {
   const [currentScreen, setCurrentScreen] = useState<Screen>('onboarding');
@@ -115,7 +116,16 @@ export default function App(): React.JSX.Element {
     }
 
     if (currentScreen === 'home') {
-      return <HomeScreen onStartScanning={handleStartScanning} />;
+      return (
+        <HomeScreen
+          onStartScanning={handleStartScanning}
+          onOpenAnalysis={() => setCurrentScreen('analysis')}
+        />
+      );
+    }
+
+    if (currentScreen === 'analysis') {
+      return <ConsumptionAnalysisScreen onBack={() => setCurrentScreen('home')} />;
     }
 
     if (currentScreen === 'scanner') {
