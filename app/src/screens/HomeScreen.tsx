@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -16,42 +17,41 @@ import {
   PANTRY_STOCK_ORDER,
   getPantryStockBand,
 } from '../constants';
+import { useScanContext } from '../context/ScanContext';
+import { Routes, type RootStackNavigationProp } from '../navigation/types';
 import { deletePantryItem, fetchPantryItems } from '../services';
 import type { PantryItem } from '../types';
 
-type HomeScreenProps = {
-  onStartScanning: () => void;
-  onOpenAnalysis: () => void;
-};
+export function HomeScreen(): React.JSX.Element {
+  const navigation = useNavigation<RootStackNavigationProp>();
+  const { resetScan } = useScanContext();
 
-export function HomeScreen({
-  onStartScanning,
-  onOpenAnalysis,
-}: HomeScreenProps): React.JSX.Element {
   const [items, setItems] = useState<PantryItem[]>([]);
   const [searchText, setSearchText] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
 
-  useEffect(() => {
-    let isMounted = true;
+  useFocusEffect(
+    useCallback(() => {
+      let isMounted = true;
 
-    async function loadPantry() {
-      setIsLoading(true);
-      setLoadError(null);
-      try {
-        const pantryItems = await fetchPantryItems();
-        if (isMounted) setItems(pantryItems);
-      } catch {
-        if (isMounted) setLoadError('No pudimos cargar tu despensa.');
-      } finally {
-        if (isMounted) setIsLoading(false);
+      async function loadPantry() {
+        setIsLoading(true);
+        setLoadError(null);
+        try {
+          const pantryItems = await fetchPantryItems();
+          if (isMounted) setItems(pantryItems);
+        } catch {
+          if (isMounted) setLoadError('No pudimos cargar tu despensa.');
+        } finally {
+          if (isMounted) setIsLoading(false);
+        }
       }
-    }
 
-    loadPantry();
-    return () => { isMounted = false; };
-  }, []);
+      loadPantry();
+      return () => { isMounted = false; };
+    }, []),
+  );
 
   const handleDeleteItem = async (productCode: string) => {
     setItems(prev => prev.filter(i => i.productCode !== productCode));
@@ -61,6 +61,11 @@ export function HomeScreen({
       const pantryItems = await fetchPantryItems().catch(() => null);
       if (pantryItems) setItems(pantryItems);
     }
+  };
+
+  const handleStartScanning = () => {
+    resetScan();
+    navigation.navigate(Routes.Scanner);
   };
 
   const normalizedSearchText = searchText.trim().toLowerCase();
@@ -84,7 +89,7 @@ export function HomeScreen({
 
         <View style={styles.header}>
           <Text style={styles.title}>Mi despensa</Text>
-          <Pressable onPress={onOpenAnalysis} hitSlop={10}>
+          <Pressable onPress={() => navigation.navigate(Routes.Analysis)} hitSlop={10}>
             <Text style={styles.habitsLink}>Mis hábitos →</Text>
           </Pressable>
         </View>
@@ -138,7 +143,7 @@ export function HomeScreen({
         )}
 
         <View style={styles.bottomBar}>
-          <Pressable style={styles.scanButton} onPress={onStartScanning}>
+          <Pressable style={styles.scanButton} onPress={handleStartScanning}>
             <View style={styles.barcodeIcon}>
               <View style={[styles.barcodeBar, styles.barcodeThin,   styles.barcodeGapNarrow]} />
               <View style={[styles.barcodeBar, styles.barcodeWide,   styles.barcodeGapNarrow]} />
