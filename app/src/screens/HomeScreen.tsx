@@ -1,7 +1,8 @@
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Animated,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -37,7 +38,7 @@ type ActionHistoryEntry =
   };
 
 const EDIT_ACTIONS: Array<{ key: EditAction; label: string }> = [
-  { key: 'used', label: 'Use' },
+  { key: 'used', label: 'Usé' },
   { key: 'finished', label: 'Se termino' },
   { key: 'adjust', label: 'Ajustar' },
 ];
@@ -50,13 +51,52 @@ export function HomeScreen(): React.JSX.Element {
   const [searchText, setSearchText] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [isPersistingEdits, setIsPersistingEdits] = useState(false);
+  const [showSaveSuccess, setShowSaveSuccess] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [activeEditAction, setActiveEditAction] = useState<EditAction>('used');
   const [pendingUsedByTypeCode, setPendingUsedByTypeCode] = useState<Record<string, number>>({});
   const [pendingFinishedByTypeCode, setPendingFinishedByTypeCode] = useState<Record<string, true>>({});
   const [actionHistory, setActionHistory] = useState<ActionHistoryEntry[]>([]);
+  const circleScale = useRef(new Animated.Value(0)).current;
+  const checkOpacity = useRef(new Animated.Value(0)).current;
+  const overlayOpacity = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (showSaveSuccess) {
+      Animated.sequence([
+        Animated.timing(overlayOpacity, {
+          toValue: 1,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+        Animated.spring(circleScale, {
+          toValue: 1,
+          friction: 5,
+          useNativeDriver: true,
+        }),
+        Animated.timing(checkOpacity, {
+          toValue: 1,
+          duration: 150,
+          useNativeDriver: true,
+        }),
+      ]).start();
+
+      const timer = setTimeout(() => {
+        setShowSaveSuccess(false);
+      }, 1200);
+
+      return () => clearTimeout(timer);
+    }
+
+    circleScale.setValue(0);
+    checkOpacity.setValue(0);
+    overlayOpacity.setValue(0);
+  }, [showSaveSuccess, circleScale, checkOpacity, overlayOpacity]);
 
   const handleEnterEditMode = () => {
+    if (isPersistingEdits) return;
+
     setActiveEditAction('used');
     setPendingUsedByTypeCode({});
     setPendingFinishedByTypeCode({});
@@ -65,6 +105,8 @@ export function HomeScreen(): React.JSX.Element {
   };
 
   const handleCancelEditMode = () => {
+    if (isPersistingEdits) return;
+
     setActiveEditAction('used');
     setPendingUsedByTypeCode({});
     setPendingFinishedByTypeCode({});
@@ -113,6 +155,7 @@ export function HomeScreen(): React.JSX.Element {
 
   const handlePantryItemPress = (item: PantryItem) => {
     if (!isEditing) return;
+    if (isPersistingEdits) return;
 
     const productTypeCode = item.productTypeCode;
     if (!productTypeCode) return;
@@ -156,6 +199,8 @@ export function HomeScreen(): React.JSX.Element {
   };
 
   const handleUndoLastAction = () => {
+    if (isPersistingEdits) return;
+
     const lastAction = actionHistory[actionHistory.length - 1];
     if (!lastAction) return;
 
@@ -197,7 +242,9 @@ export function HomeScreen(): React.JSX.Element {
   };
 
   const handleConfirmEditMode = async () => {
-    if (!hasPendingChanges) return;
+    if (!hasPendingChanges || isPersistingEdits) return;
+
+    setIsPersistingEdits(true);
 
     try {
       await confirmPantryStockEdits({
@@ -212,9 +259,12 @@ export function HomeScreen(): React.JSX.Element {
       setPendingFinishedByTypeCode({});
       setActionHistory([]);
       setIsEditing(false);
+      setShowSaveSuccess(true);
     } catch {
       const pantryItems = await fetchPantryItems().catch(() => null);
       if (pantryItems) setItems(pantryItems);
+    } finally {
+      setIsPersistingEdits(false);
     }
   };
 
@@ -364,7 +414,7 @@ export function HomeScreen(): React.JSX.Element {
           </ScrollView>
         )}
 
-        <View style={styles.bottomBar}>
+        <View style={[styles.bottomBar, isPersistingEdits ? styles.bottomBarBusy : null]}>
           {isEditing ? (
             <>
               <View style={styles.editActionRow}>
@@ -406,10 +456,12 @@ export function HomeScreen(): React.JSX.Element {
                   <Pressable
                     style={[
                       styles.undoFooterButton,
-                      !hasPendingChanges ? styles.undoFooterButtonDisabled : null,
+                      !hasPendingChanges || isPersistingEdits
+                        ? styles.undoFooterButtonDisabled
+                        : null,
                     ]}
                     onPress={handleUndoLastAction}
-                    disabled={!hasPendingChanges}
+                    disabled={!hasPendingChanges || isPersistingEdits}
                   >
                     <Text
                       style={[
@@ -422,30 +474,41 @@ export function HomeScreen(): React.JSX.Element {
                   </Pressable>
 
                   <Pressable
-                    style={styles.secondaryFooterButton}
+                    style={[
+                      styles.secondaryFooterButton,
+                      isPersistingEdits ? styles.secondaryFooterButtonDisabled : null,
+                    ]}
                     onPress={handleCancelEditMode}
+                    disabled={isPersistingEdits}
                   >
                     <Text style={styles.secondaryFooterButtonText}>Cancelar</Text>
                   </Pressable>
 
                   <Pressable
                     style={
-                      hasPendingChanges
+                      hasPendingChanges && !isPersistingEdits
                         ? styles.primaryFooterButton
                         : styles.primaryFooterButtonDisabled
                     }
                     onPress={handleConfirmEditMode}
-                    disabled={!hasPendingChanges}
+                    disabled={!hasPendingChanges || isPersistingEdits}
                   >
-                    <Text
-                      style={
-                        hasPendingChanges
-                          ? styles.primaryFooterButtonText
-                          : styles.primaryFooterButtonTextDisabled
-                      }
-                    >
-                      Confirmar
-                    </Text>
+                    {isPersistingEdits ? (
+                      <View style={styles.confirmLoadingContent}>
+                        <ActivityIndicator size="small" color="#A49889" />
+                        <Text style={styles.primaryFooterButtonTextDisabled}>Guardando...</Text>
+                      </View>
+                    ) : (
+                      <Text
+                        style={
+                          hasPendingChanges
+                            ? styles.primaryFooterButtonText
+                            : styles.primaryFooterButtonTextDisabled
+                        }
+                      >
+                        Confirmar
+                      </Text>
+                    )}
                   </Pressable>
 
                 </View>
@@ -488,6 +551,22 @@ export function HomeScreen(): React.JSX.Element {
           )}
         </View>
       </View>
+
+      {showSaveSuccess && (
+        <Animated.View style={[styles.successOverlay, { opacity: overlayOpacity }]}>
+          <Animated.View
+            style={[styles.successCircle, { transform: [{ scale: circleScale }] }]}
+          >
+            <Animated.Text style={[styles.successCheck, { opacity: checkOpacity }]}>
+              {'\u2713'}
+            </Animated.Text>
+          </Animated.View>
+
+          <Animated.Text style={[styles.successLabel, { opacity: checkOpacity }]}>
+            Stock actualizado
+          </Animated.Text>
+        </Animated.View>
+      )}
     </SafeAreaView>
   );
 }
@@ -596,6 +675,9 @@ const styles = StyleSheet.create({
     borderTopColor: '#EDE6DC',
     backgroundColor: '#FCF7F1',
   },
+  bottomBarBusy: {
+    opacity: 0.96,
+  },
   restingActionsRow: {
     width: '100%',
     minHeight: 58,
@@ -684,6 +766,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 10,
     alignItems: 'center',
+  },
+  secondaryFooterButtonDisabled: {
+    backgroundColor: '#F3EEE7',
+    borderColor: '#E4DDD4',
   },
   secondaryFooterButtonText: {
     fontSize: 13,
@@ -796,10 +882,41 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#FFFFFF',
   },
+  confirmLoadingContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   barcodeBar: { height: 18, backgroundColor: '#FFFFFF', borderRadius: 1 },
   barcodeThin: { width: 2 },
   barcodeMedium: { width: 3 },
   barcodeWide: { width: 4 },
   barcodeGapNarrow: { marginRight: 1 },
   barcodeGapWide: { marginRight: 3 },
+  successOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(26, 26, 46, 0.38)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 20,
+  },
+  successCircle: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    backgroundColor: '#4CAF50',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  successCheck: {
+    fontSize: 50,
+    color: '#FFFFFF',
+    fontWeight: '700',
+  },
+  successLabel: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    letterSpacing: 0.2,
+  },
 });

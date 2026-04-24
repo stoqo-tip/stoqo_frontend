@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { MaterialDesignIcons } from '@react-native-vector-icons/material-design-icons/static';
+import MaterialDesignIcons from '@react-native-vector-icons/material-design-icons';
 import { Category } from '../../constants';
 
 interface Props {
@@ -13,11 +13,15 @@ interface Props {
 }
 
 export function CategoryHeader({ category, filledCount, total, collapsed, completed, onToggle }: Props) {
+  const categoryIconName = category.icon as React.ComponentProps<
+    typeof MaterialDesignIcons
+  >['name'];
+
   return (
     <TouchableOpacity style={styles.container} onPress={onToggle} activeOpacity={0.8}>
       <View style={styles.left}>
         <View style={[styles.iconBadge, { backgroundColor: category.color + '22' }]}>
-          <MaterialDesignIcons name={category.icon} size={20} color={category.color} />
+          <MaterialDesignIcons name={categoryIconName} size={20} color={category.color} />
         </View>
         <Text style={styles.label}>{category.label}</Text>
       </View>
