@@ -29,10 +29,19 @@ function getOnboardingUnitLabel(
 type PantryItemsResponse = {
    items: Array<{
       product_code: string;
+      product_type_code: string | null;
       name: string;
       brand: string | null;
       quantity: number | null;
       unit: string | null;
+   }>;
+};
+
+type ConfirmPantryStockEditsRequest = {
+   items: Array<{
+      product_type_code: string;
+      used_count?: number;
+      finished?: boolean;
    }>;
 };
 
@@ -49,12 +58,33 @@ export async function fetchPantryItems(): Promise<PantryItem[]> {
 
    return data.items.map(item => ({
       productCode: item.product_code,
+      productTypeCode: item.product_type_code,
       name: item.name,
       brand: item.brand,
       quantity: item.quantity ?? 0,
       unit: item.unit,
    }));
 }
+
+export async function confirmPantryStockEdits(
+   payload: ConfirmPantryStockEditsRequest,
+): Promise<void> {
+   const response = await fetch(
+      `${API_BASE_URL}/pantry/users/${DEFAULT_USER_ID}/items/confirm-stock-edits`,
+      {
+         method: 'POST',
+         headers: {
+            'Content-Type': 'application/json',
+         },
+         body: JSON.stringify(payload),
+      },
+   );
+
+   if (!response.ok) {
+      throw new Error(`Backend error: ${response.status}`);
+   }
+}
+
 
 export async function saveScannedItemsToPantry(
    items: ScannedProductItem[],
