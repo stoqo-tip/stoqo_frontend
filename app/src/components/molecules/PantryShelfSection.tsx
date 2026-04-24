@@ -9,14 +9,14 @@ type Props = {
    chipBackground: string;
    items: PantryItem[];
    onDeleteItem?: (productCode: string) => void;
+   isEditing?: boolean;
+   onItemPress?: (item: PantryItem) => void;
+   getPendingLabel?: (item: PantryItem) => string | null;
 };
 
-export function PantryShelfSection({
-   title,
-   chipBackground,
-   items,
-   onDeleteItem,
-}: Props): React.JSX.Element {
+
+export function PantryShelfSection({ title, chipBackground, items, onDeleteItem, isEditing = false, onItemPress, getPendingLabel, }: Props): React.JSX.Element {
+
    const showSwipeHint = items.length > 1;
 
    return (
@@ -40,27 +40,40 @@ export function PantryShelfSection({
                   <Pressable
                      key={item.productCode}
                      style={styles.productCard}
-                     onLongPress={() => {
-                        Alert.alert(
-                           'Eliminar producto',
-                           `¿Eliminar "${item.name}" de tu despensa?`,
-                           [
-                              { text: 'Cancelar', style: 'cancel' },
-                              {
-                                 text: 'Eliminar',
-                                 style: 'destructive',
-                                 onPress: () => onDeleteItem?.(item.productCode),
-                              },
-                           ],
-                        );
-                     }}
+                     onPress={() => onItemPress?.(item)}
+                     onLongPress={
+                        isEditing
+                           ? undefined
+                           : () => {
+                              Alert.alert(
+                                 'Eliminar producto',
+                                 `¿Eliminar "${item.name}" de tu despensa?`,
+                                 [
+                                    { text: 'Cancelar', style: 'cancel' },
+                                    {
+                                       text: 'Eliminar',
+                                       style: 'destructive',
+                                       onPress: () => onDeleteItem?.(item.productCode),
+                                    },
+                                 ],
+                              );
+                           }
+                     }
                   >
                      <View style={styles.jarShadow} />
-                     <PantryStockJar quantity={item.quantity} />
+                     <View style={styles.jarWrap}>
+                        <PantryStockJar quantity={item.quantity} />
+                        {getPendingLabel?.(item) ? (
+                           <View style={styles.pendingBadge}>
+                              <Text style={styles.pendingBadgeText}>{getPendingLabel(item)}</Text>
+                           </View>
+                        ) : null}
+                     </View>
                      <Text numberOfLines={1} style={styles.productName}>
                         {item.name}
                      </Text>
                   </Pressable>
+
                ))}
             </ScrollView>
             {showSwipeHint ? (
@@ -194,6 +207,26 @@ const styles = StyleSheet.create({
       fontWeight: '700',
       lineHeight: 18,
       marginTop: -1,
+   },
+   jarWrap: {
+      position: 'relative',
+   },
+   pendingBadge: {
+      position: 'absolute',
+      right: -6,
+      top: -6,
+      minWidth: 24,
+      height: 24,
+      paddingHorizontal: 6,
+      borderRadius: 999,
+      backgroundColor: '#C8392B',
+      alignItems: 'center',
+      justifyContent: 'center',
+   },
+   pendingBadgeText: {
+      color: '#FFFFFF',
+      fontSize: 11,
+      fontWeight: '800',
    },
 
 });
