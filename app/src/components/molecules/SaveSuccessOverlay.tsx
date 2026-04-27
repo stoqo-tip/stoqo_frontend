@@ -10,12 +10,15 @@ type Props = {
 export function SaveSuccessOverlay({visible,label,onDone,}: Props): React.JSX.Element | null {
    const circleScale = useRef(new Animated.Value(0)).current;
    const checkOpacity = useRef(new Animated.Value(0)).current;
+   const labelOpacity = useRef(new Animated.Value(0)).current;
    const overlayOpacity = useRef(new Animated.Value(0)).current;
+
 
    useEffect(() => {
       if (!visible) {
          circleScale.setValue(0);
          checkOpacity.setValue(0);
+         labelOpacity.setValue(0);
          overlayOpacity.setValue(0);
          return;
       }
@@ -31,17 +34,24 @@ export function SaveSuccessOverlay({visible,label,onDone,}: Props): React.JSX.El
             friction: 5,
             useNativeDriver: true,
          }),
-         Animated.timing(checkOpacity, {
-            toValue: 1,
-            duration: 150,
-            useNativeDriver: true,
-         }),
+         Animated.parallel([
+            Animated.timing(checkOpacity, {
+               toValue: 1,
+               duration: 150,
+               useNativeDriver: true,
+            }),
+            Animated.timing(labelOpacity, {
+               toValue: 1,
+               duration: 150,
+               useNativeDriver: true,
+            }),
+         ]),
       ]).start();
 
-      const timer = setTimeout(onDone, 1200);
+      const timer = setTimeout(onDone, 1800);
 
       return () => clearTimeout(timer);
-   }, [visible,circleScale,checkOpacity,overlayOpacity,onDone]);
+   }, [visible,circleScale,checkOpacity,labelOpacity,overlayOpacity,onDone]);
 
    if (!visible) return null;
 
@@ -53,7 +63,7 @@ export function SaveSuccessOverlay({visible,label,onDone,}: Props): React.JSX.El
             </Animated.Text>
          </Animated.View>
 
-         <Animated.Text style={[styles.label,{opacity: checkOpacity}]}>
+         <Animated.Text style={[styles.label,{opacity: labelOpacity}]}>
             {label}
          </Animated.Text>
       </Animated.View>

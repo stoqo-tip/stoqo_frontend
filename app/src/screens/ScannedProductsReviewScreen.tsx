@@ -1,7 +1,6 @@
 import { useNavigation } from '@react-navigation/native';
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
 import {
-  Animated,
   FlatList,
   Pressable,
   StyleSheet,
@@ -10,7 +9,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { ScannedProductReviewRow } from '../components/molecules';
+import { SaveSuccessOverlay, ScannedProductReviewRow } from '../components/molecules';
 import { useScanContext } from '../context/ScanContext';
 import { Routes, type RootStackNavigationProp } from '../navigation/types';
 
@@ -27,30 +26,6 @@ export function ScannedProductsReviewScreen(): React.JSX.Element {
     confirmItems,
     resetScan,
   } = useScanContext();
-
-  const circleScale = useRef(new Animated.Value(0)).current;
-  const checkOpacity = useRef(new Animated.Value(0)).current;
-  const overlayOpacity = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    if (showSuccess) {
-      Animated.sequence([
-        Animated.timing(overlayOpacity, { toValue: 1, duration: 200, useNativeDriver: true }),
-        Animated.spring(circleScale, { toValue: 1, friction: 5, useNativeDriver: true }),
-        Animated.timing(checkOpacity, { toValue: 1, duration: 150, useNativeDriver: true }),
-      ]).start();
-
-      const timer = setTimeout(() => {
-        resetScan();
-        navigation.navigate(Routes.Home);
-      }, 1600);
-      return () => clearTimeout(timer);
-    } else {
-      circleScale.setValue(0);
-      checkOpacity.setValue(0);
-      overlayOpacity.setValue(0);
-    }
-  }, [showSuccess, circleScale, checkOpacity, overlayOpacity, resetScan, navigation]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -111,18 +86,14 @@ export function ScannedProductsReviewScreen(): React.JSX.Element {
         </Pressable>
       </View>
 
-      {showSuccess && (
-        <Animated.View style={[styles.successOverlay, { opacity: overlayOpacity }]}>
-          <Animated.View style={[styles.successCircle, { transform: [{ scale: circleScale }] }]}>
-            <Animated.Text style={[styles.successCheck, { opacity: checkOpacity }]}>
-              ✓
-            </Animated.Text>
-          </Animated.View>
-          <Animated.Text style={[styles.successLabel, { opacity: checkOpacity }]}>
-            Guardado en la alacena
-          </Animated.Text>
-        </Animated.View>
-      )}
+      <SaveSuccessOverlay
+        visible={showSuccess}
+        label="Guardado en la alacena"
+        onDone={() => {
+          resetScan();
+          navigation.navigate(Routes.Home);
+        }}
+      />
     </SafeAreaView>
   );
 }
@@ -223,32 +194,6 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '700',
-    letterSpacing: 0.2,
-  },
-  successOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(26, 26, 46, 0.85)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 20,
-  },
-  successCircle: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: '#4CAF50',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  successCheck: {
-    fontSize: 52,
-    color: '#FFFFFF',
-    fontWeight: '700',
-  },
-  successLabel: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#FFFFFF',
     letterSpacing: 0.2,
   },
 });

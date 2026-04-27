@@ -6,8 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { SaveSuccessOverlay, } from '../components/molecules';
 import { useScanContext } from '../context/ScanContext';
 import { Routes, type RootStackNavigationProp } from '../navigation/types';
-import { applyPendingStockEdits, filterPantryItems, groupPantryItemsByStockBand, hasPendingPantryStockEdits, } from '../features/pantry/model';
-import { PANTRY_STOCK_EDIT_ACTIONS, usePantryInventory, usePantryStockEditConfirmation, usePantryStockEditSession, } from '../features/pantry/hooks';
+import { PANTRY_STOCK_EDIT_ACTIONS, usePantryHome, } from '../features/pantry/hooks';
 import {PantryHomeBottomBar,PantryHomeHeader,PantryInventoryList,} from '../components/organisms';
 
 export function HomeScreen(): React.JSX.Element {
@@ -15,87 +14,49 @@ export function HomeScreen(): React.JSX.Element {
   const navigation = useNavigation<RootStackNavigationProp>();
   const { resetScan } = useScanContext();
 
-  const { items, isLoading, loadError, refreshPantry, handleDeleteItem, } = usePantryInventory();
-  const [searchText, setSearchText] = useState('');
   const [showSaveSuccess, setShowSaveSuccess] = useState(false);
-  const {
-    isEditing,
-    activeEditAction,
-    setActiveEditAction,
-    pendingUsedByTypeCode,
-    pendingFinishedByTypeCode,
-    handleEnterEditMode,
-    handleCancelEditMode,
-    handlePantryItemPress,
-    handleUndoLastAction,
-    resetEditSession,
-  } = usePantryStockEditSession();
+  const pantryHome = usePantryHome({
+    onSaveSuccess: () => setShowSaveSuccess(true),
+  });
 
   const handleStartScanning = () => {
     resetScan();
     navigation.navigate(Routes.Scanner);
   };
 
-  const filteredItems = filterPantryItems(items, searchText);
-
-  const displayedItems = applyPendingStockEdits({
-    items: filteredItems,
-    pendingUsedByTypeCode,
-    pendingFinishedByTypeCode,
-  });
-
-  const groupedItems = groupPantryItemsByStockBand(displayedItems);
-
-  const hasPendingChanges = hasPendingPantryStockEdits({
-    pendingUsedByTypeCode,
-    pendingFinishedByTypeCode,
-  });
-
-  const { isPersistingEdits, handleConfirmEditMode, } = usePantryStockEditConfirmation({
-    pendingUsedByTypeCode,
-    pendingFinishedByTypeCode,
-    hasPendingChanges,
-    refreshPantry,
-    resetEditSession,
-    onSuccess: () => setShowSaveSuccess(true),
-  });
-
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.shell}>
         <PantryHomeHeader
-          searchText={searchText}
-          isEditing={isEditing}
-          onSearchTextChange={setSearchText}
+          searchText={pantryHome.searchText}
+          isEditing={pantryHome.isEditing}
+          onSearchTextChange={pantryHome.setSearchText}
           onAnalysisPress={() => navigation.navigate(Routes.Analysis)}
         />
         <PantryInventoryList
-          items={items}
-          filteredItems={filteredItems}
-          groupedItems={groupedItems}
-          isLoading={isLoading}
-          loadError={loadError}
-          isEditing={isEditing}
-          pendingUsedByTypeCode={pendingUsedByTypeCode}
-          pendingFinishedByTypeCode={pendingFinishedByTypeCode}
-          onDeleteItem={handleDeleteItem}
-          onItemPress={item => {
-            if (isPersistingEdits) return;
-            handlePantryItemPress(item);
-          }}
+          items={pantryHome.items}
+          filteredItems={pantryHome.filteredItems}
+          groupedItems={pantryHome.groupedItems}
+          isLoading={pantryHome.isLoading}
+          loadError={pantryHome.loadError}
+          isEditing={pantryHome.isEditing}
+          pendingUsedByTypeCode={pantryHome.pendingUsedByTypeCode}
+          pendingFinishedByTypeCode={pantryHome.pendingFinishedByTypeCode}
+          onDeleteItem={pantryHome.handleDeleteItem}
+          onItemPress={pantryHome.handleInventoryItemPress}
         />
 
         <PantryHomeBottomBar
-          isEditing={isEditing}
-          isPersistingEdits={isPersistingEdits}
+          isEditing={pantryHome.isEditing}
+          isPersistingEdits={pantryHome.isPersistingEdits}
           actions={PANTRY_STOCK_EDIT_ACTIONS}
-          activeAction={activeEditAction}
-          hasPendingChanges={hasPendingChanges}
-          onActionChange={setActiveEditAction}
-          onUndo={handleUndoLastAction}
-          onCancelEdit={handleCancelEditMode}
-          onConfirmEdit={handleConfirmEditMode}
-          onEnterEdit={handleEnterEditMode}
+          activeAction={pantryHome.activeEditAction}
+          hasPendingChanges={pantryHome.hasPendingChanges}
+          onActionChange={pantryHome.setActiveEditAction}
+          onUndo={pantryHome.handleUndoLastAction}
+          onCancelEdit={pantryHome.handleCancelEditMode}
+          onConfirmEdit={pantryHome.handleConfirmEditMode}
+          onEnterEdit={pantryHome.handleEnterEditMode}
           onScan={handleStartScanning}
         />
 
