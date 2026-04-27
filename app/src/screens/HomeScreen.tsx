@@ -4,37 +4,12 @@ import {StyleSheet,View,} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { SaveSuccessOverlay, } from '../components/molecules';
-import { useScanContext } from '../context/ScanContext';
-import { Routes, type RootStackNavigationProp } from '../navigation/types';
-import { PANTRY_STOCK_EDIT_ACTIONS, usePantryHome, } from '../features/pantry/hooks';
 import {PantryHomeBottomBar,PantryHomeHeader,PantryInventoryList,} from '../components/organisms';
-
-type EditAction = 'used' | 'finished' | 'adjust';
-
-type DisplayPantryItem = PantryItem & {
-  pendingUsedCount: number;
-  originalQuantity: number;
-};
-
-type ActionHistoryEntry =
-  | {
-    kind: 'used';
-    productTypeCode: string;
-  }
-  | {
-    kind: 'finished';
-    productTypeCode: string;
-    previousUsedCount: number;
-  };
-
-const EDIT_ACTIONS: Array<{ key: EditAction; label: string }> = [
-  { key: 'used', label: 'Usé' },
-  { key: 'finished', label: 'Se termino' },
-  { key: 'adjust', label: 'Ajustar' },
-];
+import { useScanContext } from '../context/ScanContext';
+import { PANTRY_STOCK_EDIT_ACTIONS, usePantryHome, } from '../features/pantry/hooks';
+import { Routes, type RootStackNavigationProp } from '../navigation/types';
 
 export function HomeScreen(): React.JSX.Element {
-
   const navigation = useNavigation<RootStackNavigationProp>();
   const { resetScan } = useScanContext();
 
@@ -57,6 +32,7 @@ export function HomeScreen(): React.JSX.Element {
           onSearchTextChange={pantryHome.setSearchText}
           onAnalysisPress={() => navigation.navigate(Routes.Analysis)}
         />
+
         <PantryInventoryList
           items={pantryHome.items}
           filteredItems={pantryHome.filteredItems}
@@ -83,7 +59,6 @@ export function HomeScreen(): React.JSX.Element {
           onEnterEdit={pantryHome.handleEnterEditMode}
           onScan={handleStartScanning}
         />
-
       </View>
 
       <SaveSuccessOverlay
@@ -91,7 +66,6 @@ export function HomeScreen(): React.JSX.Element {
         label="Stock actualizado"
         onDone={() => setShowSaveSuccess(false)}
       />
-
     </SafeAreaView>
   );
 }
