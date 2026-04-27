@@ -29,7 +29,7 @@ function CategorySectionComponent({ category, pantry, onUpdate }: Props) {
     prevFilledRef.current = filledCount;
   }, [filledCount, total]);
 
-  const categoryDefault = CATEGORY_DEFAULTS[category.id] ?? CATEGORY_DEFAULTS['default'];
+  const categoryDefault = CATEGORY_DEFAULTS[category.id] ?? CATEGORY_DEFAULTS.default;
 
   return (
     <View style={[styles.container, completed && styles.containerCompleted]}>
