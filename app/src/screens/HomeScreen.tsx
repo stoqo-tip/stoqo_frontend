@@ -9,6 +9,30 @@ import { Routes, type RootStackNavigationProp } from '../navigation/types';
 import { PANTRY_STOCK_EDIT_ACTIONS, usePantryHome, } from '../features/pantry/hooks';
 import {PantryHomeBottomBar,PantryHomeHeader,PantryInventoryList,} from '../components/organisms';
 
+type EditAction = 'used' | 'finished' | 'adjust';
+
+type DisplayPantryItem = PantryItem & {
+  pendingUsedCount: number;
+  originalQuantity: number;
+};
+
+type ActionHistoryEntry =
+  | {
+    kind: 'used';
+    productTypeCode: string;
+  }
+  | {
+    kind: 'finished';
+    productTypeCode: string;
+    previousUsedCount: number;
+  };
+
+const EDIT_ACTIONS: Array<{ key: EditAction; label: string }> = [
+  { key: 'used', label: 'Usé' },
+  { key: 'finished', label: 'Se termino' },
+  { key: 'adjust', label: 'Ajustar' },
+];
+
 export function HomeScreen(): React.JSX.Element {
 
   const navigation = useNavigation<RootStackNavigationProp>();
