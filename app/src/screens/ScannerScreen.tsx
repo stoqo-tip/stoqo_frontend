@@ -87,6 +87,8 @@ export function ScannerScreen(): React.JSX.Element {
   const [lookupState, setLookupState] = useState<ScannerFeedbackState>('idle');
   const [bannerLabel, setBannerLabel] = useState(DEFAULT_LABEL);
   const [bannerMessage, setBannerMessage] = useState<string | undefined>();
+  const [missingBarcode, setMissingBarcode] = useState<string | null>(null);
+
 
   const scannedBarcodeSet = useMemo(
     () => new Set(scannedItems.map(item => item.barcode)),
@@ -101,6 +103,7 @@ export function ScannerScreen(): React.JSX.Element {
   const handleAcceptedBarcode = useCallback(
     async (barcode: string) => {
       setBannerLabel(barcode);
+      setMissingBarcode(null);
 
       if (scannedBarcodeSet.has(barcode)) {
         setLookupState('success');
@@ -137,6 +140,7 @@ export function ScannerScreen(): React.JSX.Element {
 
         setLookupState('not-found');
         setBannerMessage('No encontrado');
+        setMissingBarcode(barcode);
       } catch {
         if (requestId !== lookupRequestIdRef.current) {
           return;
@@ -261,6 +265,19 @@ export function ScannerScreen(): React.JSX.Element {
             {scannedItems.length} producto
             {scannedItems.length === 1 ? '' : 's'} en lista
           </Text>
+
+          {lookupState === 'not-found' && missingBarcode ? (
+            <Pressable
+              onPress={() =>
+                navigation.navigate(Routes.ProductCapture, {
+                  barcode: missingBarcode,
+                })
+              }
+              style={styles.captureButton}
+            >
+              <Text style={styles.captureButtonText}>Cargar producto</Text>
+            </Pressable>
+          ) : null}
 
           <Pressable
             onPress={() => navigation.navigate(Routes.Review)}
@@ -404,6 +421,19 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 10,
   },
+  captureButton: {
+    height: 48,
+    borderRadius: 18,
+    backgroundColor: '#C8392B',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10,
+  },
+  captureButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '800',
+  },
   finalizeButtonDisabled: {
     backgroundColor: '#979AAF',
   },
@@ -463,4 +493,5 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     transform: [{ rotate: '-45deg' }],
   },
+  
 });
