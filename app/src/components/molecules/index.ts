@@ -8,4 +8,5 @@ export * from './JarStepper';
 export * from './ProductRow';
 export * from './OnboardingProgressBar';
 export * from './PantryShelfSection';
+export * from './ProductCapturePhotoCard';
 export * from './SaveSuccessOverlay';
