@@ -27,7 +27,10 @@ export type RootStackParamList = {
   [Routes.ProductCaptureCamera]: {
     barcode: string;
     target: ProductCapturePhotoTarget;
+    frontPhotoPath?: string;
+    nutritionPhotoPath?: string;
   };
+
 };
 
 export type RootStackNavigationProp = NativeStackNavigationProp<RootStackParamList>;

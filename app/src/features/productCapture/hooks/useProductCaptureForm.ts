@@ -1,4 +1,4 @@
-import {useEffect,useMemo,useState,} from 'react';
+import { useEffect, useMemo, useState, } from 'react';
 
 
 import {
@@ -11,23 +11,13 @@ import {
    type ProductCaptureNutritionDraft,
 } from '../model';
 import {
+   extractProductCaptureOcr,
    parseProductCapture,
    submitProductCapture,
    type ProductCaptureNutrition,
    type ProductCaptureParsed,
 } from '../../../services';
 
-// Punto de integracion: reemplazar estos placeholders por OCR de ML Kit.
-const MOCK_FRONT_TEXT = `Nescafe
-Dolca Original
-100 g`;
-
-const MOCK_NUTRITION_TEXT = `Valor energetico 80 kcal
-Proteinas 1.8 g
-Carbohidratos 16 g
-Azucares 14 g
-Grasas totales 0.5 g
-Sodio 40 mg`;
 
 type UseProductCaptureFormParams = {
    barcode: string;
@@ -35,7 +25,7 @@ type UseProductCaptureFormParams = {
    nutritionPhotoPath?: string;
 };
 
-export function useProductCaptureForm({barcode, frontPhotoPath, nutritionPhotoPath,}: UseProductCaptureFormParams) {
+export function useProductCaptureForm({ barcode, frontPhotoPath, nutritionPhotoPath, }: UseProductCaptureFormParams) {
 
    const [frontText, setFrontText] = useState('');
    const [nutritionText, setNutritionText] = useState('');
@@ -51,6 +41,7 @@ export function useProductCaptureForm({barcode, frontPhotoPath, nutritionPhotoPa
       EMPTY_PRODUCT_CAPTURE_NUTRITION_DRAFT,
    );
    const [isParsing, setIsParsing] = useState(false);
+   const [isReadingOcr, setIsReadingOcr] = useState(false);
    const [isSaving, setIsSaving] = useState(false);
    const [errorMessage, setErrorMessage] = useState<string | null>(null);
    const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -64,17 +55,64 @@ export function useProductCaptureForm({barcode, frontPhotoPath, nutritionPhotoPa
    );
 
       useEffect(() => {
-      if (frontPhotoPath && frontText.length === 0) {
-         setFrontText(MOCK_FRONT_TEXT);
-      }
-   }, [frontPhotoPath,frontText.length,]);
+      const shouldReadFrontPhoto = frontPhotoPath && frontText.length === 0;
+      const shouldReadNutritionPhoto = nutritionPhotoPath && nutritionText.length === 0;
 
-   useEffect(() => {
-      if (nutritionPhotoPath && nutritionText.length === 0) {
-         setNutritionText(MOCK_NUTRITION_TEXT);
+      if (!shouldReadFrontPhoto && !shouldReadNutritionPhoto) {
+         return;
       }
-   }, [nutritionPhotoPath,nutritionText.length,]);
 
+      const currentFrontPhotoPath = frontPhotoPath;
+      const currentNutritionPhotoPath = nutritionPhotoPath;
+      let isMounted = true;
+
+      async function extractText(): Promise<void> {
+         setIsReadingOcr(true);
+         setErrorMessage(null);
+
+         try {
+            const ocrResult = await extractProductCaptureOcr({
+               barcode,
+               frontPhotoPath: currentFrontPhotoPath,
+               nutritionPhotoPath: currentNutritionPhotoPath,
+            });
+
+            if (!isMounted) {
+               return;
+            }
+
+            if (shouldReadFrontPhoto) {
+               setFrontText(ocrResult.front_text);
+            }
+
+            if (shouldReadNutritionPhoto) {
+               setNutritionText(ocrResult.nutrition_text);
+            }
+
+            if (ocrResult.warnings.length > 0) {
+               setErrorMessage(ocrResult.warnings.join('\n'));
+            }
+         } catch {
+            if (isMounted) {
+               setErrorMessage('No se pudo leer el texto de la imagen.');
+            }
+         } finally {
+            if (isMounted) {
+               setIsReadingOcr(false);
+            }
+         }
+      }
+
+      extractText().catch(() => {
+         if (isMounted) {
+            setErrorMessage('No se pudo leer el texto de la imagen.');
+         }
+      });
+
+      return () => {
+         isMounted = false;
+      };
+   }, [barcode,frontPhotoPath,nutritionPhotoPath,frontText.length,nutritionText.length,]);
 
    function applyParsedCapture(nextParsed: ProductCaptureParsed): void {
       setParsed(nextParsed);
@@ -96,7 +134,7 @@ export function useProductCaptureForm({barcode, frontPhotoPath, nutritionPhotoPa
             barcode,
             front_text: frontText,
             nutrition_text: nutritionText,
-            source: 'ML_KIT',
+            source: 'PADDLE_OCR',
          });
          applyParsedCapture(nextParsed);
       } catch {
@@ -123,7 +161,7 @@ export function useProductCaptureForm({barcode, frontPhotoPath, nutritionPhotoPa
             nutrition,
             front_text: frontText,
             nutrition_text: nutritionText,
-            source: 'ML_KIT',
+            source: 'PADDLE_OCR',
             needs_review: true,
          });
 
@@ -147,6 +185,7 @@ export function useProductCaptureForm({barcode, frontPhotoPath, nutritionPhotoPa
       quantityUnit,
       nutritionDraft,
       isParsing,
+      isReadingOcr,
       isSaving,
       errorMessage,
       successMessage,
@@ -158,6 +197,8 @@ export function useProductCaptureForm({barcode, frontPhotoPath, nutritionPhotoPa
       setQuantityValue,
       setQuantityUnit,
       setNutritionDraft,
+      setFrontText,
+      setNutritionText,
       handleParse,
       handleSave,
    };

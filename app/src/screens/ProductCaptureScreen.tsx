@@ -4,14 +4,14 @@ import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View, } fro
 import { SafeAreaView, } from 'react-native-safe-area-context';
 
 import { ProductCapturePhotoCard, } from '../components/molecules';
-import { ProductCaptureNutritionFields, ProductCaptureReviewFields, } from '../components/organisms';
+import { ProductCaptureNutritionFields, ProductCaptureRawTextFields, ProductCaptureReviewFields, } from '../components/organisms';
 import { useProductCaptureForm, } from '../features/productCapture/hooks';
 import { Routes, type ProductCaptureRouteProp, type RootStackNavigationProp, } from '../navigation/types';
 
 export function ProductCaptureScreen(): React.JSX.Element {
    const navigation = useNavigation<RootStackNavigationProp>();
    const route = useRoute<ProductCaptureRouteProp>();
-   const {barcode,frontPhotoPath,nutritionPhotoPath,} = route.params;
+   const { barcode, frontPhotoPath, nutritionPhotoPath, } = route.params;
    const {
       frontText,
       nutritionText,
@@ -23,6 +23,7 @@ export function ProductCaptureScreen(): React.JSX.Element {
       quantityUnit,
       nutritionDraft,
       isParsing,
+      isReadingOcr,
       isSaving,
       errorMessage,
       successMessage,
@@ -34,6 +35,8 @@ export function ProductCaptureScreen(): React.JSX.Element {
       setQuantityValue,
       setQuantityUnit,
       setNutritionDraft,
+      setFrontText,
+      setNutritionText,
       handleParse,
       handleSave,
    } = useProductCaptureForm({
@@ -70,7 +73,10 @@ export function ProductCaptureScreen(): React.JSX.Element {
                         navigation.navigate(Routes.ProductCaptureCamera, {
                            barcode,
                            target: 'front',
+                           frontPhotoPath,
+                           nutritionPhotoPath,
                         })
+
                      }
                   />
                   <ProductCapturePhotoCard
@@ -80,14 +86,35 @@ export function ProductCaptureScreen(): React.JSX.Element {
                         navigation.navigate(Routes.ProductCaptureCamera, {
                            barcode,
                            target: 'nutrition',
+                           frontPhotoPath,
+                           nutritionPhotoPath,
                         })
+
                      }
                   />
                </View>
+
+               <ProductCaptureRawTextFields
+                  frontText={frontText}
+                  nutritionText={nutritionText}
+                  onChangeFrontText={setFrontText}
+                  onChangeNutritionText={setNutritionText}
+               />
+
+               {isReadingOcr ? (
+                  <View style={styles.ocrStatus}>
+                     <ActivityIndicator color="#C8392B" />
+                     <Text style={styles.ocrStatusText}>Leyendo imagen...</Text>
+                  </View>
+               ) : null}
+
+               {errorMessage ? <Text style={styles.captureErrorText}>{errorMessage}</Text> : null}
+
                <Pressable
                   onPress={handleParse}
-                  disabled={!canParse || isParsing}
-                  style={[styles.parseButton, (!canParse || isParsing) && styles.disabledButton,]}
+
+                  disabled={!canParse || isParsing || isReadingOcr}
+                  style={[styles.parseButton, (!canParse || isParsing || isReadingOcr) && styles.disabledButton,]}
                >
                   {isParsing ? (
                      <ActivityIndicator color="#FFFFFF" />
@@ -229,6 +256,22 @@ const styles = StyleSheet.create({
       color: '#FFFFFF',
       fontSize: 15,
       fontWeight: '800',
+   },
+   ocrStatus: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+   },
+   ocrStatusText: {
+      color: '#4F4A45',
+      fontSize: 13,
+      fontWeight: '800',
+   },
+   captureErrorText: {
+      color: '#D14343',
+      fontSize: 13,
+      fontWeight: '700',
+      lineHeight: 18,
    },
    warningBox: {
       marginBottom: 12,

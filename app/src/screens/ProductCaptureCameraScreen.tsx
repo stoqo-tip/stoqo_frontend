@@ -1,22 +1,22 @@
-import {useNavigation,useRoute,} from '@react-navigation/native';
-import React, {useRef,useState,} from 'react';
-import {Pressable,StyleSheet,Text,View,} from 'react-native';
-import {SafeAreaView,} from 'react-native-safe-area-context';
-import {Camera,useCameraDevice,useCameraPermission,} from 'react-native-vision-camera';
+import { useNavigation, useRoute, } from '@react-navigation/native';
+import React, { useRef, useState, } from 'react';
+import { Pressable, StyleSheet, Text, View, } from 'react-native';
+import { SafeAreaView, } from 'react-native-safe-area-context';
+import { Camera, useCameraDevice, useCameraPermission, } from 'react-native-vision-camera';
 
-import {ScreenMessage,} from '../components/atoms';
-import {Routes,type ProductCaptureCameraRouteProp,type RootStackNavigationProp,} from '../navigation/types';
+import { ScreenMessage, } from '../components/atoms';
+import { Routes, type ProductCaptureCameraRouteProp, type RootStackNavigationProp, } from '../navigation/types';
 
 export function ProductCaptureCameraScreen(): React.JSX.Element {
    const navigation = useNavigation<RootStackNavigationProp>();
    const route = useRoute<ProductCaptureCameraRouteProp>();
-   const {barcode,target,} = route.params;
+   const { barcode, target, frontPhotoPath, nutritionPhotoPath, } = route.params;
    const cameraRef = useRef<Camera>(null);
 
    const device = useCameraDevice('back');
-   const {hasPermission,requestPermission,} = useCameraPermission();
-   const [isTakingPhoto,setIsTakingPhoto,] = useState(false);
-   const [errorMessage,setErrorMessage,] = useState<string | null>(null);
+   const { hasPermission, requestPermission, } = useCameraPermission();
+   const [isTakingPhoto, setIsTakingPhoto,] = useState(false);
+   const [errorMessage, setErrorMessage,] = useState<string | null>(null);
 
    async function handleTakePhoto(): Promise<void> {
       if (!cameraRef.current || isTakingPhoto) {
@@ -30,10 +30,10 @@ export function ProductCaptureCameraScreen(): React.JSX.Element {
          const photo = await cameraRef.current.takePhoto();
          navigation.navigate(Routes.ProductCapture, {
             barcode,
-            ...(target === 'front'
-               ? {frontPhotoPath: photo.path,}
-               : {nutritionPhotoPath: photo.path,}),
+            frontPhotoPath: target === 'front' ? photo.path : frontPhotoPath,
+            nutritionPhotoPath: target === 'nutrition' ? photo.path : nutritionPhotoPath,
          });
+
       } catch {
          setErrorMessage('No se pudo capturar la foto.');
       } finally {
@@ -76,10 +76,17 @@ export function ProductCaptureCameraScreen(): React.JSX.Element {
             photo={true}
          />
 
-         <SafeAreaView style={styles.overlay} edges={['top','bottom']}>
+         <SafeAreaView style={styles.overlay} edges={['top', 'bottom']}>
             <View style={styles.topRow}>
                <Pressable
-                  onPress={() => navigation.navigate(Routes.ProductCapture, {barcode,})}
+                  onPress={() =>
+                     navigation.navigate(Routes.ProductCapture, {
+                        barcode,
+                        frontPhotoPath,
+                        nutritionPhotoPath,
+                     })
+                  }
+
                   style={styles.topActionButton}
                >
                   <Text style={styles.topActionText}>Volver</Text>
@@ -98,7 +105,7 @@ export function ProductCaptureCameraScreen(): React.JSX.Element {
                <Pressable
                   onPress={handleTakePhoto}
                   disabled={isTakingPhoto}
-                  style={[styles.captureButton,isTakingPhoto && styles.captureButtonDisabled,]}
+                  style={[styles.captureButton, isTakingPhoto && styles.captureButtonDisabled,]}
                >
                   <Text style={styles.captureButtonText}>
                      {isTakingPhoto ? 'Capturando...' : 'Tomar foto'}
