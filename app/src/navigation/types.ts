@@ -1,6 +1,7 @@
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 export const Routes = {
+  Auth: 'Auth',
   Onboarding: 'Onboarding',
   Home: 'Home',
   Analysis: 'Analysis',
@@ -9,6 +10,7 @@ export const Routes = {
 } as const;
 
 export type RootStackParamList = {
+  [Routes.Auth]: undefined;
   [Routes.Onboarding]: undefined;
   [Routes.Home]: undefined;
   [Routes.Analysis]: undefined;

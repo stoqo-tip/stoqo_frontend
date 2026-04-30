@@ -3,8 +3,7 @@ import type { PantryItem, ScannedProductItem } from '../types';
 
 import { API_BASE_URL } from '../config/api';
 import { PANTRY_CATEGORIES } from '../constants';
-
-const DEFAULT_USER_ID = 1;
+import { getAuthHeaders } from './authTokenStorage';
 
 const ONBOARDING_PRODUCTS = new Map(
    PANTRY_CATEGORIES.flatMap(category =>
@@ -46,9 +45,9 @@ type ConfirmPantryStockEditsRequest = {
 };
 
 export async function fetchPantryItems(): Promise<PantryItem[]> {
-   const response = await fetch(
-      `${API_BASE_URL}/pantry/users/${DEFAULT_USER_ID}/items`,
-   );
+   const response = await fetch(`${API_BASE_URL}/pantry/me/items`, {
+      headers: await getAuthHeaders(),
+   });
 
    if (!response.ok) {
       throw new Error(`Backend error: ${response.status}`);
@@ -69,22 +68,19 @@ export async function fetchPantryItems(): Promise<PantryItem[]> {
 export async function confirmPantryStockEdits(
    payload: ConfirmPantryStockEditsRequest,
 ): Promise<void> {
-   const response = await fetch(
-      `${API_BASE_URL}/pantry/users/${DEFAULT_USER_ID}/items/confirm-stock-edits`,
-      {
-         method: 'POST',
-         headers: {
-            'Content-Type': 'application/json',
-         },
-         body: JSON.stringify(payload),
+   const response = await fetch(`${API_BASE_URL}/pantry/me/items/confirm-stock-edits`, {
+      method: 'POST',
+      headers: {
+         'Content-Type': 'application/json',
+         ...(await getAuthHeaders()),
       },
-   );
+      body: JSON.stringify(payload),
+   });
 
    if (!response.ok) {
       throw new Error(`Backend error: ${response.status}`);
    }
 }
-
 
 export async function saveScannedItemsToPantry(
    items: ScannedProductItem[],
@@ -97,16 +93,14 @@ export async function saveScannedItemsToPantry(
       })),
    };
 
-   const response = await fetch(
-      `${API_BASE_URL}/pantry/users/${DEFAULT_USER_ID}/items`,
-      {
-         method: 'POST',
-         headers: {
-            'Content-Type': 'application/json',
-         },
-         body: JSON.stringify(payload),
+   const response = await fetch(`${API_BASE_URL}/pantry/me/items`, {
+      method: 'POST',
+      headers: {
+         'Content-Type': 'application/json',
+         ...(await getAuthHeaders()),
       },
-   );
+      body: JSON.stringify(payload),
+   });
 
    if (!response.ok) {
       throw new Error(`Backend error: ${response.status}`);
@@ -115,8 +109,11 @@ export async function saveScannedItemsToPantry(
 
 export async function deletePantryItem(productCode: string): Promise<void> {
    const response = await fetch(
-      `${API_BASE_URL}/pantry/users/${DEFAULT_USER_ID}/items/${encodeURIComponent(productCode)}`,
-      { method: 'DELETE' },
+      `${API_BASE_URL}/pantry/me/items/${encodeURIComponent(productCode)}`,
+      {
+         method: 'DELETE',
+         headers: await getAuthHeaders(),
+      },
    );
 
    if (!response.ok) {
@@ -135,16 +132,14 @@ export async function saveOnboardingItemsToPantry(
       })),
    };
 
-   const response = await fetch(
-      `${API_BASE_URL}/pantry/users/${DEFAULT_USER_ID}/items`,
-      {
-         method: 'POST',
-         headers: {
-            'Content-Type': 'application/json',
-         },
-         body: JSON.stringify(payload),
+   const response = await fetch(`${API_BASE_URL}/pantry/me/items`, {
+      method: 'POST',
+      headers: {
+         'Content-Type': 'application/json',
+         ...(await getAuthHeaders()),
       },
-   );
+      body: JSON.stringify(payload),
+   });
 
    if (!response.ok) {
       throw new Error(`Backend error: ${response.status}`);

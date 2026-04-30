@@ -1,10 +1,11 @@
 import { useNavigation, } from '@react-navigation/native';
 import React, { useState, } from 'react';
-import {StyleSheet,View,} from 'react-native';
+import { StyleSheet, View, } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useAuthContext } from '../context/AuthContext';
 
 import { SaveSuccessOverlay, } from '../components/molecules';
-import {PantryHomeBottomBar,PantryHomeHeader,PantryInventoryList,} from '../components/organisms';
+import { PantryHomeBottomBar, PantryHomeHeader, PantryInventoryList, } from '../components/organisms';
 import { useScanContext } from '../context/ScanContext';
 import { PANTRY_STOCK_EDIT_ACTIONS, usePantryHome, } from '../features/pantry/hooks';
 import { Routes, type RootStackNavigationProp } from '../navigation/types';
@@ -12,6 +13,7 @@ import { Routes, type RootStackNavigationProp } from '../navigation/types';
 export function HomeScreen(): React.JSX.Element {
   const navigation = useNavigation<RootStackNavigationProp>();
   const { resetScan } = useScanContext();
+  const { logout } = useAuthContext();
 
   const [showSaveSuccess, setShowSaveSuccess] = useState(false);
   const pantryHome = usePantryHome({
@@ -31,6 +33,7 @@ export function HomeScreen(): React.JSX.Element {
           isEditing={pantryHome.isEditing}
           onSearchTextChange={pantryHome.setSearchText}
           onAnalysisPress={() => navigation.navigate(Routes.Analysis)}
+          onLogoutPress={logout}
         />
 
         <PantryInventoryList

@@ -6,23 +6,36 @@ type Props = {
    isEditing: boolean;
    onSearchTextChange: (text: string) => void;
    onAnalysisPress: () => void;
+   onLogoutPress: () => void;
 };
 
-export function PantryHomeHeader({searchText,isEditing,onSearchTextChange,onAnalysisPress,}: Props): React.JSX.Element {
+export function PantryHomeHeader({searchText,isEditing,onSearchTextChange,onAnalysisPress,onLogoutPress,}: Props): React.JSX.Element {
    return (
       <>
          <View style={styles.header}>
             <Text style={styles.title}>Mi despensa</Text>
 
-            <Pressable
-               onPress={onAnalysisPress}
-               hitSlop={10}
-               disabled={isEditing}
-            >
-               <Text style={[styles.habitsLink,isEditing ? styles.habitsLinkDisabled : null]}>
-                  Mis habitos
-               </Text>
-            </Pressable>
+            <View style={styles.actions}>
+               <Pressable
+                  onPress={onAnalysisPress}
+                  hitSlop={10}
+                  disabled={isEditing}
+               >
+                  <Text style={[styles.actionLink,isEditing ? styles.actionLinkDisabled : null]}>
+                     Mis habitos
+                  </Text>
+               </Pressable>
+
+               <Pressable
+                  onPress={onLogoutPress}
+                  hitSlop={10}
+                  disabled={isEditing}
+               >
+                  <Text style={[styles.logoutLink,isEditing ? styles.actionLinkDisabled : null]}>
+                     Salir
+                  </Text>
+               </Pressable>
+            </View>
          </View>
 
          <View style={styles.searchWrap}>
@@ -55,12 +68,22 @@ const styles = StyleSheet.create({
       color: '#1A0E08',
       letterSpacing: -0.5,
    },
-   habitsLink: {
+   actions: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 14,
+   },
+   actionLink: {
       fontSize: 14,
       fontWeight: '600',
       color: '#C8392B',
    },
-   habitsLinkDisabled: {
+   logoutLink: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: '#756A5F',
+   },
+   actionLinkDisabled: {
       color: '#C9B8AA',
    },
    searchWrap: {

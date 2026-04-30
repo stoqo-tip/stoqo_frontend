@@ -1,6 +1,5 @@
 import { API_BASE_URL } from '../config/api';
-
-const DEFAULT_USER_ID = 1;
+import { getAuthHeaders } from './authTokenStorage';
 
 export type ConsumptionProduct = {
   product_type_code: string;
@@ -19,9 +18,9 @@ type ConsumptionAnalysisResponse = {
 };
 
 export async function fetchConsumptionAnalysis(): Promise<ConsumptionProduct[]> {
-  const response = await fetch(
-    `${API_BASE_URL}/consumption/users/${DEFAULT_USER_ID}/analysis`,
-  );
+  const response = await fetch(`${API_BASE_URL}/consumption/me/analysis`, {
+    headers: await getAuthHeaders(),
+  });
 
   if (!response.ok) {
     throw new Error(`Backend error: ${response.status}`);
